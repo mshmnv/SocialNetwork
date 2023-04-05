@@ -1,0 +1,30 @@
+version: v1
+plugins:
+  - plugin: go
+    path: bin/protoc-gen-go
+    out: pkg
+    opt:
+      - paths=source_relative
+    strategy: directory
+
+  - plugin: go-grpc
+    path: bin/protoc-gen-go-grpc
+    out: pkg
+    opt:
+      - paths=source_relative
+    strategy: directory
+
+  - plugin: grpc-gateway
+    path: bin/protoc-gen-grpc-gateway
+    out: pkg
+    opt:
+      - logtostderr=true
+      - paths=source_relative
+      - generate_unbound_methods=true
+
+  - plugin: openapiv2
+    path: bin/protoc-gen-openapiv2
+    out: pkg
+    opt:
+      - generate_unbound_methods=true
+    strategy: directory
