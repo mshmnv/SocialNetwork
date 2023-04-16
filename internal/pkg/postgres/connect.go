@@ -11,8 +11,6 @@ var dbKey = "db"
 
 const conn = "postgres://admin:root@db_container:5432/social_network?sslmode=disable"
 
-// conn      "postgresql://test:test@localhost:5432/test")
-
 func Connect() (*sql.DB, func() error, error) {
 
 	db, err := sql.Open("postgres", conn)

@@ -14,6 +14,7 @@ import (
 	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
 	desc "github.com/mshmnv/SocialNetwork/pkg/api/user"
 	"github.com/oklog/run"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 )
 
@@ -33,13 +34,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Register service
+	// register service
 	server := grpc.NewServer()
 	userServer := userService.NewUserAPI(postgresCtx)
 	desc.RegisterUserAPIServer(server, userServer)
 
 	rmux := runtime.NewServeMux()
 	mux := http.NewServeMux()
+
 	mux.Handle("/", rmux)
 	{
 		err := desc.RegisterUserAPIHandlerServer(ctx, rmux, userServer)
@@ -48,7 +50,10 @@ func main() {
 		}
 	}
 
-	//Serve
+	// metrics
+	mux.Handle("/metrics", promhttp.Handler())
+
+	// serve
 
 	var g run.Group
 	{

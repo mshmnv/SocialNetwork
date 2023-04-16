@@ -13,7 +13,7 @@ import (
 func (i *Implementation) Register(ctx context.Context, req *desc.RegisterRequest) (*desc.RegisterResponse, error) {
 
 	if !isValidData(req) {
-		return nil, status.Error(codes.InvalidArgument, "Невалидные данные")
+		return nil, status.Error(codes.InvalidArgument, "Invalid data")
 	}
 
 	userData := &userDS.User{
@@ -26,7 +26,7 @@ func (i *Implementation) Register(ctx context.Context, req *desc.RegisterRequest
 		Password:   req.GetPassword(),
 	}
 
-	err := i.userService.Register(ctx, userData)
+	err := i.userService.Register(userData)
 	if err != nil {
 		return nil, err
 	}

@@ -16,6 +16,8 @@ type IRepository interface {
 	GetUser(id uint64) (*datastruct.User, error)
 	IsExistedUser(id uint64) bool
 	GetLoginData(id uint64) (*datastruct.LoginData, error)
+	AddUsers() error
+	Search(firstName, secondName string) ([]datastruct.User, error)
 }
 
 type Service struct {
@@ -32,7 +34,7 @@ func BuildService(ctx context.Context) *Service {
 func (s *Service) Login(data *datastruct.LoginData) error {
 
 	if !s.IsExistedUser(data.ID) {
-		return status.Error(codes.NotFound, "Пользователь не найден")
+		return status.Error(codes.NotFound, "User is not found")
 	}
 
 	dbData, err := s.repository.GetLoginData(data.ID)
@@ -43,13 +45,13 @@ func (s *Service) Login(data *datastruct.LoginData) error {
 
 	if err = bcrypt.CompareHashAndPassword([]byte(dbData.Password), []byte(data.Password)); err != nil {
 		logger.Errorf("Wrong password: %v", err)
-		return status.Error(codes.Unauthenticated, "Неверный пароль")
+		return status.Error(codes.Unauthenticated, "Invalid password")
 	}
 
 	return nil
 }
 
-func (s *Service) Register(ctx context.Context, data *datastruct.User) error {
+func (s *Service) Register(data *datastruct.User) error {
 	pass, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
 	if err != nil {
 		logger.Errorf("Error generating user password: %v", err)
@@ -63,10 +65,10 @@ func (s *Service) Register(ctx context.Context, data *datastruct.User) error {
 	return nil
 }
 
-func (s *Service) GetUser(ctx context.Context, id uint64) (*datastruct.User, error) {
+func (s *Service) GetUser(id uint64) (*datastruct.User, error) {
 
 	if !s.IsExistedUser(id) {
-		return nil, status.Error(codes.NotFound, "Анкета не найдена")
+		return nil, status.Error(codes.NotFound, "User is not found")
 	}
 
 	user, err := s.repository.GetUser(id)
@@ -79,4 +81,26 @@ func (s *Service) GetUser(ctx context.Context, id uint64) (*datastruct.User, err
 
 func (s *Service) IsExistedUser(id uint64) bool {
 	return s.repository.IsExistedUser(id)
+}
+
+func (s *Service) Search(firstName, secondName string) ([]datastruct.User, error) {
+	users, err := s.repository.Search(firstName, secondName)
+	if err != nil {
+		logger.Errorf("Error searching users: %v", err)
+		return nil, err
+	}
+	return users, err
+}
+
+func (s *Service) AddUsers() {
+	logger.Info("Process of adding users started")
+
+	go func() {
+		err := s.repository.AddUsers()
+		if err != nil {
+			logger.Errorf("Error adding users: %v", err)
+			return
+		}
+		logger.Info("All users are successfully added")
+	}()
 }

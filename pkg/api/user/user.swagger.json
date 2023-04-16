@@ -16,6 +16,38 @@
     "application/json"
   ],
   "paths": {
+    "/add-users": {
+      "post": {
+        "operationId": "UserAPI_AddUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userAddUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userAddUsersRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserAPI"
+        ]
+      }
+    },
     "/login": {
       "post": {
         "operationId": "UserAPI_Login",
@@ -110,6 +142,116 @@
           "UserAPI"
         ]
       }
+    },
+    "/user/search": {
+      "get": {
+        "operationId": "UserAPI_Search",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userSearchResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "firstName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "secondName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserAPI"
+        ]
+      }
+    },
+    "/user/search/{firstName}": {
+      "get": {
+        "operationId": "UserAPI_Search2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userSearchResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "firstName",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "pattern": "query"
+          },
+          {
+            "name": "secondName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserAPI"
+        ]
+      }
+    },
+    "/user/search/{secondName}": {
+      "get": {
+        "operationId": "UserAPI_Search3",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userSearchResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "secondName",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "pattern": "query"
+          },
+          {
+            "name": "firstName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserAPI"
+        ]
+      }
     }
   },
   "definitions": {
@@ -140,6 +282,12 @@
           }
         }
       }
+    },
+    "userAddUsersRequest": {
+      "type": "object"
+    },
+    "userAddUsersResponse": {
+      "type": "object"
     },
     "userGetUserResponse": {
       "type": "object",
@@ -209,6 +357,42 @@
     },
     "userRegisterResponse": {
       "type": "object"
+    },
+    "userSearchResponse": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/userUserData"
+          }
+        }
+      }
+    },
+    "userUserData": {
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "type": "string"
+        },
+        "secondName": {
+          "type": "string"
+        },
+        "age": {
+          "type": "string",
+          "format": "int64"
+        },
+        "birthdate": {
+          "type": "string"
+        },
+        "biography": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        }
+      }
     }
   }
 }

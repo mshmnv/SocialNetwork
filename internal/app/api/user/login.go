@@ -12,7 +12,7 @@ import (
 // Login реализует /login
 func (i *Implementation) Login(ctx context.Context, req *desc.LoginRequest) (*desc.LoginResponse, error) {
 	if req.GetId() == 0 || req.GetPassword() == "" {
-		return nil, status.Error(codes.InvalidArgument, "Невалидные данные")
+		return nil, status.Error(codes.InvalidArgument, "Invalid user id or password")
 	}
 
 	data := &userDS.LoginData{

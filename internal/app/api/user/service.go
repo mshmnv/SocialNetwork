@@ -9,9 +9,11 @@ import (
 )
 
 type IUserService interface {
-	Register(ctx context.Context, data *datastruct.User) error
-	GetUser(ctx context.Context, id uint64) (*datastruct.User, error)
+	Register(data *datastruct.User) error
+	GetUser(id uint64) (*datastruct.User, error)
 	Login(data *datastruct.LoginData) error
+	AddUsers()
+	Search(firstName, secondName string) ([]datastruct.User, error)
 }
 
 type Implementation struct {

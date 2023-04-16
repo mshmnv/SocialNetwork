@@ -12,10 +12,10 @@ import (
 func (i *Implementation) GetUser(ctx context.Context, req *desc.GetUserRequest) (*desc.GetUserResponse, error) {
 
 	if req.GetId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Невалидные данные")
+		return nil, status.Error(codes.InvalidArgument, "Invalid user id")
 	}
 
-	user, err := i.userService.GetUser(ctx, req.GetId())
+	user, err := i.userService.GetUser(req.GetId())
 	if err != nil {
 		return nil, err
 	}

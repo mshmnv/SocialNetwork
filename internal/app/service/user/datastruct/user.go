@@ -1,12 +1,12 @@
 package datastruct
 
 type User struct {
-	FirstName  string `db:"first_name"`
-	SecondName string `db:"second_name"`
-	Age        int64  `db:"age"`
-	BirthDate  string `db:"birthdate"` //todo
-	Biography  string `db:"biography"`
-	City       string `db:"city"`
+	FirstName  string `db:"first_name" json:"first_name"`
+	SecondName string `db:"second_name" json:"second_name"`
+	Age        int64  `db:"age" json:"age"`
+	BirthDate  string `db:"birthdate" json:"birthdate"`
+	Biography  string `db:"biography" json:"biography"`
+	City       string `db:"city" json:"city"`
 	Password   string `db:"password"`
 }
 
