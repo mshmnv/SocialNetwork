@@ -22,7 +22,6 @@ type IRepository interface {
 
 type Service struct {
 	repository IRepository
-	ctx        context.Context
 }
 
 func BuildService(ctx context.Context) *Service {
@@ -32,7 +31,6 @@ func BuildService(ctx context.Context) *Service {
 }
 
 func (s *Service) Login(data *datastruct.LoginData) error {
-
 	if !s.IsExistedUser(data.ID) {
 		return status.Error(codes.NotFound, "User is not found")
 	}
@@ -66,7 +64,6 @@ func (s *Service) Register(data *datastruct.User) error {
 }
 
 func (s *Service) GetUser(id uint64) (*datastruct.User, error) {
-
 	if !s.IsExistedUser(id) {
 		return nil, status.Error(codes.NotFound, "User is not found")
 	}

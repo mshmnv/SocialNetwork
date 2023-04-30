@@ -11,7 +11,6 @@ import (
 
 // Register реализует /user/register
 func (i *Implementation) Register(ctx context.Context, req *desc.RegisterRequest) (*desc.RegisterResponse, error) {
-
 	if !isValidData(req) {
 		return nil, status.Error(codes.InvalidArgument, "Invalid data")
 	}

@@ -16,11 +16,15 @@ generate: .generate-proto
 
 .PHONY: up
 up:
-	docker-compose up --build
+	docker-compose up -d --build
 
 .PHONY: down
 down:
 	docker-compose down
+
+.PHONY: restart
+restart:
+	docker compose restart
 
 .PHONY: rm
 rm:
@@ -40,5 +44,7 @@ migration-up:
 migration-down:
 	goose -dir $(MIGRATIONS_FOLDER) postgres "$(POSTGRES_CONNECTION)" down
 
-
+.PHONY: lint
+lint:
+	golangci-lint run --config=.golangci.yaml ./...
 

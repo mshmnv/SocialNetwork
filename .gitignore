@@ -1,2 +1,4 @@
 .idea/
 /bin/
+/postgresql/db_data_sync_1
+/postgresql/db_data_sync_2

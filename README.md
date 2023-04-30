@@ -35,4 +35,5 @@ curl -X POST "http://localhost:8080/add-users"
 ### *Highload Architect Course:*
 1. MVP
 2. Indexes and Load Testing
-3. ...
+3. Replication
+4. 

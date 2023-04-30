@@ -10,8 +10,58 @@ services:
       POSTGRES_PASSWORD: root
       POSTGRES_DB: social_network
     volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - $PWD/postgresql/db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - pgnet
+
+  db_async:
+    container_name: db_async_container
+    image: postgres:15.2-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+    volumes:
+      - $PWD/postgresql/db_data_async/:/var/lib/postgresql/data
+    restart: unless-stopped
+    depends_on:
+      - db
+    networks:
+      - pgnet
+
+#  db_sync_1:
+#    container_name: db_sync_1_container
+#    image: postgres:15.2-alpine
+#    ports:
+#      - "5434:5432"
+#    environment:
+#      POSTGRES_USER: admin
+#      POSTGRES_PASSWORD: root
+#    volumes:
+#      - $PWD/postgresql/db_data_sync_1/:/var/lib/postgresql/data
+#    restart: unless-stopped
+#    depends_on:
+#      - db
+#    networks:
+#      - pgnet
+#
+#  db_sync_2:
+#    container_name: db_sync_2_container
+#    image: postgres:15.2-alpine
+#    ports:
+#      - "5435:5432"
+#    environment:
+#      POSTGRES_USER: admin
+#      POSTGRES_PASSWORD: root
+#    volumes:
+#      - $PWD/postgresql/db_data_sync_2/:/var/lib/postgresql/data
+#    restart: unless-stopped
+#    depends_on:
+#      - db
+#    networks:
+#      - pgnet
 
   server:
     container_name: server_container
@@ -23,6 +73,9 @@ services:
     depends_on:
       - db
     restart: always
+    networks:
+      - pgnet
+      - appnet
 
   grafana:
     build:
@@ -32,6 +85,8 @@ services:
       - "3000:3000"
     environment:
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: "/var/lib/grafana/dashboards/dashboard.json"
+    networks:
+      - appnet
 
   prometheus:
     image: prom/prometheus
@@ -46,8 +101,34 @@ services:
     ports:
       - "9090:9090"
     restart: always
+    networks:
+      - appnet
+      - pgnet
 
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    ports:
+      - 9187:9187
+    environment:
+      DATA_SOURCE_NAME: "postgres://admin:root@db_container:5432/social_network?sslmode=disable,postgres://admin:root@db_async_container:5432/social_network?sslmode=disable"
+    links:
+      - db
+      - db_async
+      - prometheus
+    networks:
+      - pgnet
+      - appnet
 
 volumes:
   db_data:
   prometheus_data:
+  db_data_async:
+#  db_data_sync_1:
+#  db_data_sync_2:
+
+networks:
+  pgnet:
+    ipam:
+      config:
+          - subnet: "172.16.0.0/16"
+  appnet:

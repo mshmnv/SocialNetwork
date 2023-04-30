@@ -11,6 +11,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq"
 	userService "github.com/mshmnv/SocialNetwork/internal/app/api/user"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/metrics"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
 	desc "github.com/mshmnv/SocialNetwork/pkg/api/user"
 	"github.com/oklog/run"
@@ -21,12 +22,19 @@ import (
 func main() {
 	ctx := context.Background()
 
-	db, _, err := postgres.Connect()
+	_, postgresCtx, err := postgres.Connect(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	postgresCtx := postgres.NewContext(ctx, db)
 
+	app := startServer(ctx, postgresCtx)
+
+	if err := app.Run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func startServer(ctx context.Context, postgresCtx context.Context) run.Group {
 	fs := flag.NewFlagSet("", flag.ExitOnError)
 	grpcAddr := fs.String("grpc-addr", ":6565", "grpc address")
 	httpAddr := fs.String("http-addr", ":8080", "http address")
@@ -40,9 +48,9 @@ func main() {
 	desc.RegisterUserAPIServer(server, userServer)
 
 	rmux := runtime.NewServeMux()
-	mux := http.NewServeMux()
 
-	mux.Handle("/", rmux)
+	mux := http.NewServeMux()
+	mux.Handle("/", metrics.PrometheusMiddleware(rmux))
 	{
 		err := desc.RegisterUserAPIHandlerServer(ctx, rmux, userServer)
 		if err != nil {
@@ -51,6 +59,7 @@ func main() {
 	}
 
 	// metrics
+
 	mux.Handle("/metrics", promhttp.Handler())
 
 	// serve
@@ -80,8 +89,5 @@ func main() {
 			httpListener.Close()
 		})
 	}
-
-	if err := g.Run(); err != nil {
-		log.Fatal(err)
-	}
+	return g
 }

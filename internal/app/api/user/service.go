@@ -22,7 +22,6 @@ type Implementation struct {
 }
 
 func NewUserAPI(ctx context.Context) *Implementation {
-
 	return &Implementation{
 		userService: userService.BuildService(ctx),
 	}

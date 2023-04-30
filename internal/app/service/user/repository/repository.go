@@ -27,8 +27,10 @@ func NewRepository(ctx context.Context) *Repository {
 }
 
 func (r *Repository) Register(data *datastruct.User) error {
-
 	tx, err := postgres.GetDB(r.ctx).Begin()
+	if err != nil {
+		return err
+	}
 
 	userQuery, args, err := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Insert(userTable).
@@ -56,10 +58,13 @@ func (r *Repository) GetUser(id uint64) (*datastruct.User, error) {
 		From(userTable).
 		Where(sq.Eq{"id": id}).
 		ToSql()
+	if err != nil {
+		return nil, err
+	}
 
 	var results datastruct.User
 
-	if err = postgres.GetDB(r.ctx).QueryRow(query, args...).
+	if err = postgres.GetAsyncDB(r.ctx).QueryRow(query, args...).
 		Scan(&results.FirstName, &results.SecondName, &results.Age, &results.BirthDate, &results.Biography, &results.City); err != nil {
 		return nil, errors.Wrap(err, "Error getting user data")
 	}
@@ -73,12 +78,15 @@ func (r *Repository) GetLoginData(id uint64) (*datastruct.LoginData, error) {
 		From(userTable).
 		Where(sq.Eq{"id": id}).
 		ToSql()
+	if err != nil {
+		return nil, err
+	}
 
 	var results datastruct.LoginData
 
 	if err = postgres.GetDB(r.ctx).QueryRow(query, args...).
 		Scan(&results.ID, &results.Password); err != nil {
-		return nil, errors.Wrap(err, "No user with this email found. Register!")
+		return nil, errors.Wrap(err, "no user with this email found")
 	}
 
 	return &results, nil
@@ -90,6 +98,9 @@ func (r *Repository) IsExistedUser(id uint64) bool {
 		From(userTable).
 		Where(sq.Eq{"id": id}).
 		ToSql()
+	if err != nil {
+		return false
+	}
 
 	var result int64
 	if err = postgres.GetDB(r.ctx).QueryRow(query, args...).
@@ -100,16 +111,21 @@ func (r *Repository) IsExistedUser(id uint64) bool {
 	return true
 }
 
+const searchLimit = 100
+
 func (r *Repository) Search(firstName, secondName string) ([]datastruct.User, error) {
 	query, args, err := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select(`first_name, second_name, age, birthdate, biography, city`).
 		From(userTable).
 		Where(sq.Like{"upper(first_name)": strings.ToUpper(firstName) + "%", "upper(second_name)": strings.ToUpper(secondName) + "%"}).
 		OrderBy("id").
-		Limit(100).
+		Limit(searchLimit).
 		ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Error searching users")
+	}
 
-	rows, err := postgres.GetDB(r.ctx).Query(query, args...)
+	rows, err := postgres.GetAsyncDB(r.ctx).Query(query, args...)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error searching users")
 	}
@@ -146,7 +162,7 @@ func (r *Repository) AddUsers() error {
 		return err
 	}
 
-	if err = r.addUsers(users); err != nil { // todo delete limit
+	if err = r.addUsers(users); err != nil {
 		return err
 	}
 
@@ -154,17 +170,19 @@ func (r *Repository) AddUsers() error {
 }
 
 func (r *Repository) addUsers(data []datastruct.User) error {
-
 	tx, err := postgres.GetDB(r.ctx).Begin()
+	if err != nil {
+		return err
+	}
 
 	for _, user := range data {
-
 		userQuery, args, err := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 			Insert(userTable).
 			SetMap(user.GetUsersDBRecord()).ToSql()
 		if err != nil {
 			return err
 		}
+
 		_, err = tx.Exec(userQuery, args...)
 		if err != nil {
 			_ = tx.Rollback()
