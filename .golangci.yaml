@@ -1,5 +1,3 @@
-# todo
-
 run:
     timeout: 5m
     tests: true

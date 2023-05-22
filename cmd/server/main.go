@@ -11,6 +11,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq"
 	userService "github.com/mshmnv/SocialNetwork/internal/app/api/user"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/auth"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/metrics"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
 	desc "github.com/mshmnv/SocialNetwork/pkg/api/user"
@@ -50,7 +51,7 @@ func startServer(ctx context.Context, postgresCtx context.Context) run.Group {
 	rmux := runtime.NewServeMux()
 
 	mux := http.NewServeMux()
-	mux.Handle("/", metrics.PrometheusMiddleware(rmux))
+	mux.Handle("/", metrics.PrometheusMiddleware(auth.AuthenticationMiddleware(rmux)))
 	{
 		err := desc.RegisterUserAPIHandlerServer(ctx, rmux, userServer)
 		if err != nil {

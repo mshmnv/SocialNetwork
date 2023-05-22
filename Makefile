@@ -48,3 +48,4 @@ migration-down:
 lint:
 	golangci-lint run --config=.golangci.yaml ./...
 
+# --cookie  "session-token=07b2a9d1-4bd0-422e-bd5c-497c80e8e1d2"

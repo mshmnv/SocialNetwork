@@ -12,7 +12,7 @@
 
 Авторизация пользователя
 ```bash
- curl -X POST "http://localhost:8080/login" -d '{"id": "5", "password": "best password"}'
+ curl -X POST "http://localhost:8080/login" -d '{"id": "1009900", "password": "best password"}'
 ```
 
 Получение анкеты пользователя
@@ -36,4 +36,5 @@ curl -X POST "http://localhost:8080/add-users"
 1. MVP
 2. Indexes and Load Testing
 3. Replication
-4. 
+4. Cache
+5. 
