@@ -11,14 +11,13 @@ import (
 var dbKey = "db"
 
 const (
-	conn      = "postgres://admin:root@db_container:5432/social_network?sslmode=disable"
-	connAsync = "postgres://admin:root@db_async_container:5432/social_network?sslmode=disable"
-	//connSync = "postgres://admin:root@db_sync_1_container:5433/social_network?sslmode=disable"
+	conn = "postgres://admin:root@db_container:5432/social_network?sslmode=disable"
+	//connAsync = "postgres://admin:root@db_async_container:5432/social_network?sslmode=disable"
 )
 
 type DatabaseSet struct {
 	master DB
-	async  DB
+	//async  DB
 	//syncDB *DB
 }
 
@@ -36,10 +35,10 @@ func Connect(ctx context.Context) (*DatabaseSet, context.Context, error) {
 		return nil, nil, err
 	}
 
-	dbSet.async.db, dbSet.async.closer, err = connect(connAsync)
-	if err != nil {
-		return nil, nil, err
-	}
+	//dbSet.async.db, dbSet.async.closer, err = connect(connAsync)
+	//if err != nil {
+	//	return nil, nil, err
+	//}
 
 	logger.Info("Successfully connected to database")
 
@@ -78,6 +77,6 @@ func GetDB(ctx context.Context) *sql.DB {
 	return FromContext(ctx).master.db
 }
 
-func GetAsyncDB(ctx context.Context) *sql.DB {
-	return FromContext(ctx).async.db
-}
+//func GetAsyncDB(ctx context.Context) *sql.DB {
+//	return FromContext(ctx).async.db
+//}

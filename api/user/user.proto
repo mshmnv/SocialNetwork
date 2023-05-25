@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package user;
 
-option go_package = "/user";
+option go_package = "github.com/mshmnv/SocialNetwork/user";
 
-import "api/google/api/annotations.proto";
+import "google/api/annotations.proto";
 
 service UserAPI {
 
@@ -99,6 +99,8 @@ message UserData {
   string city = 6;
 }
 
-message AddUsersRequest{}
+message AddUsersRequest{
+//  uint64 number_of_users = 1; // todo number_of_users
+}
 message AddUsersResponse{}
 

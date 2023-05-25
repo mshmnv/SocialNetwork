@@ -6,13 +6,18 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	logger "github.com/sirupsen/logrus"
-	"github.com/urfave/negroni"
 )
+
+var authRequiredMethods = []string{"/friend/set/", "/friend/delete/",
+	"/post/create", "/post/update", "/post/delete/", "/post/feed"}
+
+const loginMethod = "/login"
 
 type session struct {
 	userID uint64
@@ -30,45 +35,24 @@ const (
 	expirationPeriod       = 10 * time.Minute
 )
 
-func AuthenticationMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		for key, val := range sessions {
-			logger.Errorf("SESSION %s, userID: %d", key, val.userID)
-		}
-
-		var userSession *session
-		var err error
-
-		//if r.URL.Path != "/user/register" && r.URL.Path != "/login" {
-		if userSession, err = getSessionToken(r); err != nil {
-			http.Error(w, "Please login: "+err.Error(), http.StatusUnauthorized)
-			return
-		}
-		//}
-
-		lrw := negroni.NewResponseWriter(w)
-		next.ServeHTTP(lrw, r)
-
-		if r.URL.Path == "/login" && lrw.Status() == http.StatusOK { // todo whe recreate
-			createSession(w, userSession)
-		}
-	})
-}
-
-func getUserID(r *http.Request) uint64 {
+func getRequestBody(r *http.Request) []byte {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Errorf("can't read body: %v", err.Error())
-		return 0
+		return nil
 	}
 	r.Body = io.NopCloser(bytes.NewBuffer(body))
+	return body
+}
+
+func getUserID(r *http.Request) uint64 {
+	body := getRequestBody(r)
 	bodyData := struct {
 		ID string `json:"id"`
 	}{}
-	err = json.Unmarshal(body, &bodyData)
+	err := json.Unmarshal(body, &bodyData)
 	if err != nil {
-		logger.Errorf("can't get user id: %v", err.Error())
+		logger.Errorf("can't decode body: %v", err.Error())
 		return 0
 	}
 
@@ -80,14 +64,23 @@ func getUserID(r *http.Request) uint64 {
 	return userID
 }
 
+func isAuthRequired(r *http.Request) bool {
+	for _, authMethod := range authRequiredMethods {
+		if ok := strings.HasPrefix(r.URL.Path, authMethod); ok {
+			return true
+		}
+	}
+	return false
+}
+
 // get or create session token
 func getSessionToken(r *http.Request) (*session, error) {
-	if r.URL.Path == "/login" {
+	if r.URL.Path == loginMethod {
 		userID := getUserID(r)
 		return &session{userID: userID, expiry: time.Now().Add(expirationPeriod)}, nil
 	}
 
-	if r.URL.Path == "/user/register" {
+	if !isAuthRequired(r) {
 		return nil, nil
 	}
 
@@ -106,12 +99,49 @@ func getSessionToken(r *http.Request) (*session, error) {
 		delete(sessions, sessionToken)
 		return nil, errors.New("user session is expired")
 	}
+
+	updateRequestBody(r, "user_id", strconv.FormatUint(userSession.userID, 10))
+
 	return &userSession, nil
 }
 
-func createSession(w http.ResponseWriter, userSession *session) {
-	newSessionToken := uuid.NewString()
+func updateRequestBody(r *http.Request, key string, value string) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		logger.Errorf("can't read body: %v", err.Error())
+		return
+	}
 
+	logger.Errorf("BODY: %s", body) //todo delete
+
+	request := make(map[string]json.RawMessage)
+
+	err = json.Unmarshal(body, &request)
+	if err != nil {
+		logger.Errorf("can't decode body: %v", err.Error())
+		return
+	}
+
+	request[key] = json.RawMessage(value)
+	newBody, err := json.Marshal(request)
+	if err != nil {
+		logger.Errorf("can't encode new modified body: %v", err.Error())
+		return
+	}
+	r.Body = io.NopCloser(bytes.NewBuffer(newBody))
+
+	logger.Errorf("NEW BODY: %s", newBody) // todo delete
+}
+
+func createSession(w http.ResponseWriter, userSession *session) {
+	for token, s := range sessions {
+		if s.userID == userSession.userID && !userSession.isExpired() {
+			printToken(w, token)
+			return
+		}
+	}
+
+	newSessionToken := uuid.NewString()
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionTokenCookieName,
 		Value:    newSessionToken,
@@ -123,6 +153,12 @@ func createSession(w http.ResponseWriter, userSession *session) {
 	})
 
 	sessions[newSessionToken] = session{userID: userSession.userID, expiry: userSession.expiry}
+	printToken(w, newSessionToken)
+}
 
-	logger.Infof("Session created: %s", newSessionToken)
+func printToken(w http.ResponseWriter, token string) {
+	_, err := io.WriteString(w, "{\"token\": \""+token+"\"}")
+	if err != nil {
+		logger.Errorf("can't write token: %v", err.Error())
+	}
 }

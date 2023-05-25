@@ -10,11 +10,13 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq"
+	friendService "github.com/mshmnv/SocialNetwork/internal/app/api/friend"
 	userService "github.com/mshmnv/SocialNetwork/internal/app/api/user"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/auth"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/metrics"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
-	desc "github.com/mshmnv/SocialNetwork/pkg/api/user"
+	friendDesc "github.com/mshmnv/SocialNetwork/pkg/api/friend"
+	userDesc "github.com/mshmnv/SocialNetwork/pkg/api/user"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
@@ -35,6 +37,8 @@ func main() {
 	}
 }
 
+//func startServices()
+
 func startServer(ctx context.Context, postgresCtx context.Context) run.Group {
 	fs := flag.NewFlagSet("", flag.ExitOnError)
 	grpcAddr := fs.String("grpc-addr", ":6565", "grpc address")
@@ -46,14 +50,19 @@ func startServer(ctx context.Context, postgresCtx context.Context) run.Group {
 	// register service
 	server := grpc.NewServer()
 	userServer := userService.NewUserAPI(postgresCtx)
-	desc.RegisterUserAPIServer(server, userServer)
+	userDesc.RegisterUserAPIServer(server, userServer)
+	friendServer := friendService.NewFriendAPI(postgresCtx)
+	friendDesc.RegisterFriendAPIServer(server, friendServer)
 
 	rmux := runtime.NewServeMux()
-
 	mux := http.NewServeMux()
 	mux.Handle("/", metrics.PrometheusMiddleware(auth.AuthenticationMiddleware(rmux)))
 	{
-		err := desc.RegisterUserAPIHandlerServer(ctx, rmux, userServer)
+		err := userDesc.RegisterUserAPIHandlerServer(ctx, rmux, userServer)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = friendDesc.RegisterFriendAPIHandlerServer(ctx, rmux, friendServer)
 		if err != nil {
 			log.Fatal(err)
 		}

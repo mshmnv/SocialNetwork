@@ -15,21 +15,21 @@ services:
     networks:
       - pgnet
 
-  db_async:
-    container_name: db_async_container
-    image: postgres:15.2-alpine
-    ports:
-      - "5433:5432"
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: root
-    volumes:
-      - $PWD/postgresql/db_data_async/:/var/lib/postgresql/data
-    restart: unless-stopped
-    depends_on:
-      - db
-    networks:
-      - pgnet
+#  db_async:
+#    container_name: db_async_container
+#    image: postgres:15.2-alpine
+#    ports:
+#      - "5433:5432"
+#    environment:
+#      POSTGRES_USER: admin
+#      POSTGRES_PASSWORD: root
+#    volumes:
+#      - $PWD/postgresql/db_data_async/:/var/lib/postgresql/data
+#    restart: unless-stopped
+#    depends_on:
+#      - db
+#    networks:
+#      - pgnet
 
 #  db_sync_1:
 #    container_name: db_sync_1_container
@@ -110,10 +110,11 @@ services:
     ports:
       - 9187:9187
     environment:
-      DATA_SOURCE_NAME: "postgres://admin:root@db_container:5432/social_network?sslmode=disable,postgres://admin:root@db_async_container:5432/social_network?sslmode=disable"
+      DATA_SOURCE_NAME: "postgres://admin:root@db_container:5432/social_network?sslmode=disable"
+#      DATA_SOURCE_NAME: "postgres://admin:root@db_container:5432/social_network?sslmode=disable,postgres://admin:root@db_async_container:5432/social_network?sslmode=disable"
     links:
       - db
-      - db_async
+#      - db_async
       - prometheus
     networks:
       - pgnet
@@ -122,7 +123,7 @@ services:
 volumes:
   db_data:
   prometheus_data:
-  db_data_async:
+#  db_data_async:
 #  db_data_sync_1:
 #  db_data_sync_2:
 

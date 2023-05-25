@@ -64,7 +64,7 @@ func (r *Repository) GetUser(id uint64) (*datastruct.User, error) {
 
 	var results datastruct.User
 
-	if err = postgres.GetAsyncDB(r.ctx).QueryRow(query, args...).
+	if err = postgres.GetDB(r.ctx).QueryRow(query, args...).
 		Scan(&results.FirstName, &results.SecondName, &results.Age, &results.BirthDate, &results.Biography, &results.City); err != nil {
 		return nil, errors.Wrap(err, "Error getting user data")
 	}
@@ -125,7 +125,7 @@ func (r *Repository) Search(firstName, secondName string) ([]datastruct.User, er
 		return nil, errors.Wrap(err, "Error searching users")
 	}
 
-	rows, err := postgres.GetAsyncDB(r.ctx).Query(query, args...)
+	rows, err := postgres.GetDB(r.ctx).Query(query, args...)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error searching users")
 	}

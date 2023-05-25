@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "api/user/user.proto",
+    "title": "user/user.proto",
     "version": "version not set"
   },
   "tags": [
@@ -284,7 +284,8 @@
       }
     },
     "userAddUsersRequest": {
-      "type": "object"
+      "type": "object",
+      "title": "uint64 number_of_users = 1; // todo number_of_users"
     },
     "userAddUsersResponse": {
       "type": "object"

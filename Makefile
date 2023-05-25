@@ -12,7 +12,8 @@ generate: .generate-proto
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1 && \
 	GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.15.2 && \
 	GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.15.2 && \
-	buf generate --path $(PROTO_SRC)/*/*.proto
+	buf generate --path $(PROTO_SRC)/user/*.proto
+	buf generate --path $(PROTO_SRC)/friend/*.proto
 
 .PHONY: up
 up:
@@ -48,4 +49,4 @@ migration-down:
 lint:
 	golangci-lint run --config=.golangci.yaml ./...
 
-# --cookie  "session-token=07b2a9d1-4bd0-422e-bd5c-497c80e8e1d2"
+# --cookie  "session-token=d4d2bd49-1d1c-4b93-b1e6-fd157b962591"
