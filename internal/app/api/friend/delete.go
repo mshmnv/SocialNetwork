@@ -11,14 +11,16 @@ import (
 // Delete реализует /friend/delete/{user_id}
 func (i *Implementation) Delete(ctx context.Context, req *desc.DeleteRequest) (*desc.DeleteResponse, error) {
 
-	if req.GetUserId() == 0 {
+	userID := ctx.Value("user_id").(uint64)
+	if userID == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Invalid user id")
 	}
-	if req.GetFriendId() == 0 {
+
+	if req.GetUserId() == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Invalid friend id")
 	}
 
-	if err := i.friendService.DeleteFriend(req.GetFriendId(), req.GetUserId()); err != nil {
+	if err := i.friendService.DeleteFriend(req.GetUserId(), userID); err != nil {
 		return nil, err
 	}
 

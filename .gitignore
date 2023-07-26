@@ -1,3 +1,5 @@
 .idea/
 /bin/
 /postgresql/
+/cache_data/
+.DS_Store

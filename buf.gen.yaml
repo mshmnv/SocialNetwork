@@ -28,3 +28,13 @@ plugins:
     opt:
       - generate_unbound_methods=true
     strategy: directory
+
+#  - plugin: js
+#    out: pkg/api
+#    opt:
+#      - import_style=commonjs
+#  - plugin: grpc-web
+#    out: pkg/api
+#    opt:
+#      - import_style=commonjs
+#      - mode=grpcwebtext

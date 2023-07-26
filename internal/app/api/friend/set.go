@@ -11,19 +11,21 @@ import (
 // Set реализует /friend/set/{user_id}
 func (i *Implementation) Set(ctx context.Context, req *desc.SetRequest) (*desc.SetResponse, error) {
 
-	if req.GetUserId() == 0 {
+	userID := ctx.Value("user_id").(uint64)
+	if userID == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Invalid user id")
-
 	}
-	if req.GetFriendId() == 0 {
+
+	if req.GetUserId() == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Invalid friend id")
+
 	}
 
-	if req.GetUserId() == req.GetFriendId() {
+	if req.GetUserId() == userID {
 		return nil, status.Error(codes.InvalidArgument, "User id can not be equal to friend id")
 	}
 
-	if err := i.friendService.SendFriendRequest(req.GetFriendId(), req.GetUserId()); err != nil {
+	if err := i.friendService.SendFriendRequest(req.GetUserId(), userID); err != nil {
 		return nil, err
 	}
 	return &desc.SetResponse{}, nil

@@ -1,12 +1,12 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "user/user.proto",
+    "title": "post/post.proto",
     "version": "version not set"
   },
   "tags": [
     {
-      "name": "UserAPI"
+      "name": "PostAPI"
     }
   ],
   "consumes": [
@@ -16,14 +16,14 @@
     "application/json"
   ],
   "paths": {
-    "/add-users": {
+    "/add-posts": {
       "post": {
-        "operationId": "UserAPI_AddUsers",
+        "operationId": "PostAPI_AddPosts",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/userAddUsersResponse"
+              "$ref": "#/definitions/postAddPostsResponse"
             }
           },
           "default": {
@@ -39,23 +39,23 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/userAddUsersRequest"
+              "$ref": "#/definitions/postAddPostsRequest"
             }
           }
         ],
         "tags": [
-          "UserAPI"
+          "PostAPI"
         ]
       }
     },
-    "/login": {
+    "/post/create": {
       "post": {
-        "operationId": "UserAPI_Login",
+        "operationId": "PostAPI_Create",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/userLoginResponse"
+              "$ref": "#/definitions/postCreateResponse"
             }
           },
           "default": {
@@ -71,23 +71,178 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/userLoginRequest"
+              "$ref": "#/definitions/postCreateRequest"
             }
           }
         ],
         "tags": [
-          "UserAPI"
+          "PostAPI"
         ]
       }
     },
-    "/user/get/{id}": {
+    "/post/delete/{id}": {
+      "put": {
+        "operationId": "PostAPI_Delete",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/postDeleteResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "tags": [
+          "PostAPI"
+        ]
+      }
+    },
+    "/post/feed": {
       "get": {
-        "operationId": "UserAPI_GetUser",
+        "operationId": "PostAPI_Feed",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/userGetUserResponse"
+              "$ref": "#/definitions/postFeedResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "PostAPI"
+        ]
+      }
+    },
+    "/post/feed/{limit}": {
+      "get": {
+        "operationId": "PostAPI_Feed3",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/postFeedResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64",
+            "pattern": "query"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "PostAPI"
+        ]
+      }
+    },
+    "/post/feed/{offset}": {
+      "get": {
+        "operationId": "PostAPI_Feed2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/postFeedResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64",
+            "pattern": "query"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "PostAPI"
+        ]
+      }
+    },
+    "/post/get/{id}": {
+      "get": {
+        "operationId": "PostAPI_Get",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/postGetResponse"
             }
           },
           "default": {
@@ -107,18 +262,18 @@
           }
         ],
         "tags": [
-          "UserAPI"
+          "PostAPI"
         ]
       }
     },
-    "/user/register": {
-      "post": {
-        "operationId": "UserAPI_Register",
+    "/post/update": {
+      "put": {
+        "operationId": "PostAPI_Update",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/userRegisterResponse"
+              "$ref": "#/definitions/postUpdateResponse"
             }
           },
           "default": {
@@ -134,127 +289,88 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/userRegisterRequest"
+              "$ref": "#/definitions/postUpdateRequest"
             }
           }
         ],
         "tags": [
-          "UserAPI"
-        ]
-      }
-    },
-    "/user/search": {
-      "get": {
-        "operationId": "UserAPI_Search",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/userSearchResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "firstName",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "secondName",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "UserAPI"
-        ]
-      }
-    },
-    "/user/search/{firstName}": {
-      "get": {
-        "operationId": "UserAPI_Search2",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/userSearchResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "firstName",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "pattern": "query"
-          },
-          {
-            "name": "secondName",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "UserAPI"
-        ]
-      }
-    },
-    "/user/search/{secondName}": {
-      "get": {
-        "operationId": "UserAPI_Search3",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/userSearchResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "secondName",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "pattern": "query"
-          },
-          {
-            "name": "firstName",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "UserAPI"
+          "PostAPI"
         ]
       }
     }
   },
   "definitions": {
+    "postAddPostsRequest": {
+      "type": "object"
+    },
+    "postAddPostsResponse": {
+      "type": "object"
+    },
+    "postCreateRequest": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "postCreateResponse": {
+      "type": "object"
+    },
+    "postDeleteResponse": {
+      "type": "object"
+    },
+    "postFeedResponse": {
+      "type": "object",
+      "properties": {
+        "feed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/postPost"
+          }
+        }
+      }
+    },
+    "postGetResponse": {
+      "type": "object",
+      "properties": {
+        "post": {
+          "$ref": "#/definitions/postPost"
+        }
+      }
+    },
+    "postPost": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "text": {
+          "type": "string"
+        },
+        "authorId": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "postUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "postUpdateResponse": {
+      "type": "object"
+    },
     "protobufAny": {
       "type": "object",
       "properties": {
@@ -280,117 +396,6 @@
             "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
-        }
-      }
-    },
-    "userAddUsersRequest": {
-      "type": "object"
-    },
-    "userAddUsersResponse": {
-      "type": "object"
-    },
-    "userGetUserResponse": {
-      "type": "object",
-      "properties": {
-        "firstName": {
-          "type": "string"
-        },
-        "secondName": {
-          "type": "string"
-        },
-        "age": {
-          "type": "string",
-          "format": "int64"
-        },
-        "birthdate": {
-          "type": "string"
-        },
-        "biography": {
-          "type": "string"
-        },
-        "city": {
-          "type": "string"
-        }
-      }
-    },
-    "userLoginRequest": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "password": {
-          "type": "string"
-        }
-      }
-    },
-    "userLoginResponse": {
-      "type": "object"
-    },
-    "userRegisterRequest": {
-      "type": "object",
-      "properties": {
-        "firstName": {
-          "type": "string"
-        },
-        "secondName": {
-          "type": "string"
-        },
-        "age": {
-          "type": "string",
-          "format": "int64"
-        },
-        "birthdate": {
-          "type": "string"
-        },
-        "biography": {
-          "type": "string"
-        },
-        "city": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        }
-      }
-    },
-    "userRegisterResponse": {
-      "type": "object"
-    },
-    "userSearchResponse": {
-      "type": "object",
-      "properties": {
-        "users": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/userUserData"
-          }
-        }
-      }
-    },
-    "userUserData": {
-      "type": "object",
-      "properties": {
-        "firstName": {
-          "type": "string"
-        },
-        "secondName": {
-          "type": "string"
-        },
-        "age": {
-          "type": "string",
-          "format": "int64"
-        },
-        "birthdate": {
-          "type": "string"
-        },
-        "biography": {
-          "type": "string"
-        },
-        "city": {
-          "type": "string"
         }
       }
     }

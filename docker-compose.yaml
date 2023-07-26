@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: root
       POSTGRES_DB: social_network
     volumes:
-      - $PWD/postgresql/db_data:/var/lib/postgresql/data
+      - ./postgresql/db_data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
       - pgnet
@@ -24,7 +24,7 @@ services:
 #      POSTGRES_USER: admin
 #      POSTGRES_PASSWORD: root
 #    volumes:
-#      - $PWD/postgresql/db_data_async/:/var/lib/postgresql/data
+#      - ./postgresql/db_data_async/:/var/lib/postgresql/data
 #    restart: unless-stopped
 #    depends_on:
 #      - db
@@ -40,7 +40,7 @@ services:
 #      POSTGRES_USER: admin
 #      POSTGRES_PASSWORD: root
 #    volumes:
-#      - $PWD/postgresql/db_data_sync_1/:/var/lib/postgresql/data
+#      - ./postgresql/db_data_sync_1/:/var/lib/postgresql/data
 #    restart: unless-stopped
 #    depends_on:
 #      - db
@@ -56,7 +56,7 @@ services:
 #      POSTGRES_USER: admin
 #      POSTGRES_PASSWORD: root
 #    volumes:
-#      - $PWD/postgresql/db_data_sync_2/:/var/lib/postgresql/data
+#      - ./postgresql/db_data_sync_2/:/var/lib/postgresql/data
 #    restart: unless-stopped
 #    depends_on:
 #      - db
@@ -72,6 +72,7 @@ services:
       - "8080:8080"
     depends_on:
       - db
+      - cache
     restart: always
     networks:
       - pgnet
@@ -120,9 +121,21 @@ services:
       - pgnet
       - appnet
 
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    volumes:
+      - ./cache_data:/data
+    networks:
+      - appnet
+
 volumes:
   db_data:
   prometheus_data:
+  cache_data:
 #  db_data_async:
 #  db_data_sync_1:
 #  db_data_sync_2:

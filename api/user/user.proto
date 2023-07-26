@@ -99,8 +99,7 @@ message UserData {
   string city = 6;
 }
 
-message AddUsersRequest{
-//  uint64 number_of_users = 1; // todo number_of_users
-}
+message AddUsersRequest{}
+
 message AddUsersResponse{}
 

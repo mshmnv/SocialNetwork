@@ -148,7 +148,7 @@ func (r *Repository) Search(firstName, secondName string) ([]datastruct.User, er
 }
 
 func (r *Repository) AddUsers() error {
-	f, err := os.Open("people.json")
+	f, err := os.Open("testing/people.json")
 	if err != nil {
 		log.Fatal(err)
 	}

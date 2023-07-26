@@ -18,7 +18,6 @@ const (
 type DatabaseSet struct {
 	master DB
 	//async  DB
-	//syncDB *DB
 }
 
 type DB struct {
@@ -26,13 +25,13 @@ type DB struct {
 	closer func() error
 }
 
-func Connect(ctx context.Context) (*DatabaseSet, context.Context, error) {
+func Connect(ctx context.Context) (context.Context, error) {
 	var err error
 	dbSet := DatabaseSet{}
 
 	dbSet.master.db, dbSet.master.closer, err = connect(conn)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	//dbSet.async.db, dbSet.async.closer, err = connect(connAsync)
@@ -42,7 +41,7 @@ func Connect(ctx context.Context) (*DatabaseSet, context.Context, error) {
 
 	logger.Info("Successfully connected to database")
 
-	return &dbSet, newContext(ctx, &dbSet), nil
+	return newContext(ctx, &dbSet), nil
 }
 
 func connect(connection string) (*sql.DB, func() error, error) {
@@ -67,7 +66,7 @@ func newContext(ctx context.Context, dbSet *DatabaseSet) context.Context {
 func FromContext(ctx context.Context) *DatabaseSet {
 	dbStorage, ok := ctx.Value(&dbKey).(*DatabaseSet)
 	if !ok {
-		panic("Error getting connection from context")
+		panic("Error getting db connection from context")
 	}
 
 	return dbStorage

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package friend;
 
-option go_package = "github.com/mshmnv/SocialNetwork//friend";
+option go_package = "github.com/mshmnv/SocialNetwork/friend";
 
 import "google/api/annotations.proto";
 
@@ -10,13 +10,13 @@ service FriendAPI {
 
   rpc Set (SetRequest) returns (SetResponse) {
     option (google.api.http) = {
-      put: "/friend/set/{friend_id}"
+      put: "/friend/set/{user_id}"
       body: "*"
     };
   }
   rpc Delete (DeleteRequest) returns (DeleteResponse) {
     option (google.api.http) = {
-      put: "/friend/delete/{friend_id}"
+      put: "/friend/delete/{user_id}"
       body: "*"
     };
   }
@@ -24,12 +24,10 @@ service FriendAPI {
 
 message SetRequest {
     uint64 user_id = 1;
-    uint64 friend_id = 2;
 }
 message SetResponse {}
 
 message DeleteRequest {
   uint64 user_id = 1;
-  uint64 friend_id = 2;
 }
 message DeleteResponse {}

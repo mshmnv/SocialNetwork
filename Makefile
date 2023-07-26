@@ -14,10 +14,12 @@ generate: .generate-proto
 	GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.15.2 && \
 	buf generate --path $(PROTO_SRC)/user/*.proto
 	buf generate --path $(PROTO_SRC)/friend/*.proto
+	buf generate --path $(PROTO_SRC)/post/*.proto
 
 .PHONY: up
 up:
-	docker-compose up -d --build
+	#docker-compose up -d --build
+	sudo docker-compose up -d --build
 
 .PHONY: down
 down:
@@ -48,5 +50,3 @@ migration-down:
 .PHONY: lint
 lint:
 	golangci-lint run --config=.golangci.yaml ./...
-
-# --cookie  "session-token=d4d2bd49-1d1c-4b93-b1e6-fd157b962591"

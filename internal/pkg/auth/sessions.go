@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 )
 
 var authRequiredMethods = []string{"/friend/set/", "/friend/delete/",
-	"/post/create", "/post/update", "/post/delete/", "/post/feed"}
+	"/post/create", "/post/update", "/post/delete/", "/post/feed", "/add-posts"}
 
 const loginMethod = "/login"
 
@@ -33,6 +32,7 @@ func (s session) isExpired() bool {
 const (
 	sessionTokenCookieName = "session-token"
 	expirationPeriod       = 10 * time.Minute
+	userIDKey              = "user_id"
 )
 
 func getRequestBody(r *http.Request) []byte {
@@ -48,7 +48,7 @@ func getRequestBody(r *http.Request) []byte {
 func getUserID(r *http.Request) uint64 {
 	body := getRequestBody(r)
 	bodyData := struct {
-		ID string `json:"id"`
+		ID uint64 `json:"id"`
 	}{}
 	err := json.Unmarshal(body, &bodyData)
 	if err != nil {
@@ -56,12 +56,7 @@ func getUserID(r *http.Request) uint64 {
 		return 0
 	}
 
-	userID, err := strconv.ParseUint(bodyData.ID, 10, 64)
-	if err != nil {
-		logger.Errorf("can't get user id: %v", err.Error())
-		return 0
-	}
-	return userID
+	return bodyData.ID
 }
 
 func isAuthRequired(r *http.Request) bool {
@@ -81,7 +76,7 @@ func getSessionToken(r *http.Request) (*session, error) {
 	}
 
 	if !isAuthRequired(r) {
-		return nil, nil
+		return &session{}, nil
 	}
 
 	c, err := r.Cookie(sessionTokenCookieName)
@@ -99,38 +94,7 @@ func getSessionToken(r *http.Request) (*session, error) {
 		delete(sessions, sessionToken)
 		return nil, errors.New("user session is expired")
 	}
-
-	updateRequestBody(r, "user_id", strconv.FormatUint(userSession.userID, 10))
-
 	return &userSession, nil
-}
-
-func updateRequestBody(r *http.Request, key string, value string) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		logger.Errorf("can't read body: %v", err.Error())
-		return
-	}
-
-	logger.Errorf("BODY: %s", body) //todo delete
-
-	request := make(map[string]json.RawMessage)
-
-	err = json.Unmarshal(body, &request)
-	if err != nil {
-		logger.Errorf("can't decode body: %v", err.Error())
-		return
-	}
-
-	request[key] = json.RawMessage(value)
-	newBody, err := json.Marshal(request)
-	if err != nil {
-		logger.Errorf("can't encode new modified body: %v", err.Error())
-		return
-	}
-	r.Body = io.NopCloser(bytes.NewBuffer(newBody))
-
-	logger.Errorf("NEW BODY: %s", newBody) // todo delete
 }
 
 func createSession(w http.ResponseWriter, userSession *session) {

@@ -16,7 +16,7 @@
     "application/json"
   ],
   "paths": {
-    "/friend/delete/{friendId}": {
+    "/friend/delete/{userId}": {
       "put": {
         "operationId": "FriendAPI_Delete",
         "responses": {
@@ -35,7 +35,7 @@
         },
         "parameters": [
           {
-            "name": "friendId",
+            "name": "userId",
             "in": "path",
             "required": true,
             "type": "string",
@@ -46,13 +46,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "userId": {
-                  "type": "string",
-                  "format": "uint64"
-                }
-              }
+              "type": "object"
             }
           }
         ],
@@ -61,7 +55,7 @@
         ]
       }
     },
-    "/friend/set/{friendId}": {
+    "/friend/set/{userId}": {
       "put": {
         "operationId": "FriendAPI_Set",
         "responses": {
@@ -80,7 +74,7 @@
         },
         "parameters": [
           {
-            "name": "friendId",
+            "name": "userId",
             "in": "path",
             "required": true,
             "type": "string",
@@ -91,13 +85,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "userId": {
-                  "type": "string",
-                  "format": "uint64"
-                }
-              }
+              "type": "object"
             }
           }
         ],

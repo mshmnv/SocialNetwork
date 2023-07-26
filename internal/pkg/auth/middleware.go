@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/urfave/negroni"
@@ -16,8 +17,10 @@ func AuthenticationMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		ctx := context.WithValue(r.Context(), userIDKey, userSession.userID)
+
 		lrw := negroni.NewResponseWriter(w)
-		next.ServeHTTP(lrw, r)
+		next.ServeHTTP(lrw, r.WithContext(ctx))
 
 		if r.URL.Path == loginMethod && lrw.Status() == http.StatusOK {
 			createSession(lrw, userSession)

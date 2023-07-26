@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package post;
+
+option go_package = "github.com/mshmnv/SocialNetwork/post";
+
+import "google/api/annotations.proto";
+
+service PostAPI {
+
+  rpc Create (CreateRequest) returns (CreateResponse) {
+    option (google.api.http) = {
+      post: "/post/create"
+      body: "*"
+    };
+  }
+  rpc Update (UpdateRequest) returns (UpdateResponse) {
+    option (google.api.http) = {
+      put: "/post/update"
+      body: "*"
+    };
+  }
+  rpc Delete (DeleteRequest) returns (DeleteResponse) {
+    option (google.api.http) = {
+      put: "/post/delete/{id}"
+      body: "*"
+    };
+  }
+  rpc Get (GetRequest) returns (GetResponse) {
+    option (google.api.http) = {
+      get: "/post/get/{id}"
+    };
+  }
+  rpc Feed (FeedRequest) returns (FeedResponse) {
+    option (google.api.http) = {
+      get: "/post/feed"
+      additional_bindings {
+        get: "/post/feed/{offset=query}"
+      }
+      additional_bindings {
+        get: "/post/feed/{limit=query}"
+      }
+    };
+  }
+
+  rpc AddPosts (AddPostsRequest) returns (AddPostsResponse) {
+    option (google.api.http) = {
+      post: "/add-posts"
+      body: "*"
+    };
+  }
+}
+
+message CreateRequest {
+  string text = 1;
+}
+message CreateResponse {}
+
+message UpdateRequest {
+  uint64 id = 1;
+  string text = 2;
+}
+message UpdateResponse {}
+
+message DeleteRequest {
+  uint64 id = 1;
+}
+message DeleteResponse {}
+
+message GetRequest {
+  uint64 id = 1;
+}
+message GetResponse {
+  Post post = 1;
+}
+
+message Post {
+  uint64 id = 1;
+  string text = 2;
+  uint64 author_id = 3;
+}
+
+message FeedRequest {
+  uint64 offset = 1;
+  uint64 limit = 2;
+}
+message FeedResponse {
+  repeated Post feed = 1;
+}
+
+message AddPostsRequest {}
+message AddPostsResponse {}
