@@ -21,7 +21,7 @@ func NewRepository(db *postgres.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) Create(userID uint64, text string) error {
+func (r *Repository) Create(post *datastruct.Post) error {
 	tx, err := r.db.GetConnection().Begin()
 	if err != nil {
 		return err
@@ -30,11 +30,11 @@ func (r *Repository) Create(userID uint64, text string) error {
 	query, args, err := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Insert(postTable).
 		SetMap(map[string]any{
-			"author_id":  userID,
-			"text":       text,
-			"created_at": time.Now(),
-			"updated_at": time.Now(),
-			"is_deleted": false}).ToSql()
+			"author_id":  post.AuthorID,
+			"text":       post.Text,
+			"created_at": post.CreatedAt,
+			"updated_at": post.UpdatedAt,
+			"is_deleted": post.IsDeleted}).ToSql()
 	if err != nil {
 		return err
 	}

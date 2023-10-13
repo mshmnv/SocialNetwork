@@ -19,6 +19,7 @@ import (
 	"github.com/mshmnv/SocialNetwork/internal/pkg/metrics"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/redis"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/websocket"
 	dialogDesc "github.com/mshmnv/SocialNetwork/pkg/api/dialog"
 	friendDesc "github.com/mshmnv/SocialNetwork/pkg/api/friend"
 	postDesc "github.com/mshmnv/SocialNetwork/pkg/api/post"
@@ -68,32 +69,32 @@ func startServer(ctx context.Context, db *postgres.DB, shardedDB *postgres.Shard
 	// register service
 	server := grpc.NewServer()
 
-	userServer := userService.NewUserAPI(db)
-	userDesc.RegisterUserAPIServer(server, userServer)
-	friendServer := friendService.NewFriendAPI(db)
-	friendDesc.RegisterFriendAPIServer(server, friendServer)
-	postServer := postService.NewPostAPI(db, redisClient)
-	postDesc.RegisterPostAPIServer(server, postServer)
-	dialogServer := dialogService.NewDialogAPI(shardedDB, db)
-	dialogDesc.RegisterDialogAPIServer(server, dialogServer)
-
 	rmux := runtime.NewServeMux()
 	mux := http.NewServeMux()
 
-	mux.Handle("/", metrics.PrometheusMiddleware(auth.AuthenticationMiddleware(rmux)))
+	mux.Handle("/", auth.AuthenticationMiddleware(metrics.PrometheusMiddleware(rmux)))
+
 	{
+		userServer := userService.NewUserAPI(db)
+		userDesc.RegisterUserAPIServer(server, userServer)
 		err := userDesc.RegisterUserAPIHandlerServer(ctx, rmux, userServer)
 		if err != nil {
 			log.Fatal(err)
 		}
+		friendServer := friendService.NewFriendAPI(db)
+		friendDesc.RegisterFriendAPIServer(server, friendServer)
 		err = friendDesc.RegisterFriendAPIHandlerServer(ctx, rmux, friendServer)
 		if err != nil {
 			log.Fatal(err)
 		}
+		postServer := postService.NewPostAPI(db, redisClient)
+		postDesc.RegisterPostAPIServer(server, postServer)
 		err = postDesc.RegisterPostAPIHandlerServer(ctx, rmux, postServer)
 		if err != nil {
 			log.Fatal(err)
 		}
+		dialogServer := dialogService.NewDialogAPI(shardedDB, db)
+		dialogDesc.RegisterDialogAPIServer(server, dialogServer)
 		err = dialogDesc.RegisterDialogAPIHandlerServer(ctx, rmux, dialogServer)
 		if err != nil {
 			log.Fatal(err)
@@ -103,6 +104,11 @@ func startServer(ctx context.Context, db *postgres.DB, shardedDB *postgres.Shard
 	// metrics
 
 	mux.Handle("/metrics", promhttp.Handler())
+
+	// websocket handler
+
+	mux.Handle("/post/feed/posted", auth.AuthenticationMiddleware(metrics.PrometheusMiddleware(websocket.HTTPHandler())))
+	//mux.Handle("/post/feed/posted", metrics.PrometheusMiddleware(websocket.WebSocketHandler()))
 
 	// serve
 

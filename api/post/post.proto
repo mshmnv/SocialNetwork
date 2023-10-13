@@ -49,6 +49,12 @@ service PostAPI {
       body: "*"
     };
   }
+
+//  rpc FeedPosted (FeedPostedRequest) returns (FeedPostedResponse) {
+//    option (google.api.http) = {
+//      get: "/post/feed/posted"
+//    };
+//  }
 }
 
 message CreateRequest {
@@ -90,3 +96,9 @@ message FeedResponse {
 
 message AddPostsRequest {}
 message AddPostsResponse {}
+
+//message FeedPostedRequest {}
+
+//message FeedPostedResponse {
+//  repeated Post feed = 1;
+//}

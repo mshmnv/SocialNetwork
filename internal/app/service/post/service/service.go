@@ -9,13 +9,15 @@ import (
 	"github.com/mshmnv/SocialNetwork/internal/app/service/post/cache"
 	"github.com/mshmnv/SocialNetwork/internal/app/service/post/datastruct"
 	"github.com/mshmnv/SocialNetwork/internal/app/service/post/repository"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/clients"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/rabbitmq"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/redis"
 	logger "github.com/sirupsen/logrus"
 )
 
 type IRepository interface {
-	Create(userID uint64, text string) error
+	Create(post *datastruct.Post) error
 	Update(userID, postID uint64, text string) error
 	Delete(userID, postID uint64) error
 	Get(postID uint64) (*datastruct.Post, error)
@@ -30,16 +32,27 @@ type IPostCache interface {
 	GetFeedFromCache(userID []uint64) ([]datastruct.Post, error)
 }
 
+type IProducer interface {
+	Produce(message []byte, userID uint64) error
+}
+
 type Service struct {
 	repository    IRepository
 	postCache     IPostCache
 	friendService IFriendService
+	producer      IProducer
 }
 
 func BuildService(db *postgres.DB, redisClient *redis.Client) *Service {
+	p, err := rabbitmq.NewProducer()
+	if err != nil {
+		logger.Fatalf("Error creating producer: %v", err)
+	}
+
 	s := &Service{
 		repository:    repository.NewRepository(db),
 		friendService: friendService.BuildService(db),
+		producer:      p,
 	}
 
 	s.postCache = cache.NewPostCacheJob(s, redisClient)
@@ -47,7 +60,43 @@ func BuildService(db *postgres.DB, redisClient *redis.Client) *Service {
 }
 
 func (s *Service) Create(userID uint64, text string) error {
-	return s.repository.Create(userID, text)
+	post := &datastruct.Post{
+		AuthorID:  userID,
+		Text:      text,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	if err := s.repository.Create(post); err != nil {
+		logger.Errorf("Error creating post: %v", err)
+		return err
+	}
+	s.SendNewPostToFriendsFeed(post, userID)
+	return nil
+}
+
+func (s *Service) SendNewPostToFriendsFeed(post *datastruct.Post, userID uint64) {
+	message, err := post.Encode()
+	if err != nil {
+		logger.Errorf("Error encoding post: %v", err)
+		return
+	}
+
+	friends, err := s.friendService.GetUserFriends(userID)
+	if err != nil {
+		logger.Errorf("Error getting user's friends: %v", err)
+		return
+	}
+
+	for _, friend := range friends {
+		if !clients.IsConnectionForUser(friend) {
+			continue
+		}
+		err = s.producer.Produce(message, friend)
+		if err != nil {
+			logger.Errorf("Error producing post: %v", err)
+			return
+		}
+	}
 }
 
 func (s *Service) Update(userID, postID uint64, text string) error {
@@ -105,7 +154,13 @@ func (s *Service) AddPosts(userID uint64) error {
 	go func() {
 		defer f.Close()
 		for scanner.Scan() {
-			if err := s.repository.Create(userID, scanner.Text()); err != nil {
+			post := &datastruct.Post{
+				AuthorID:  userID,
+				Text:      scanner.Text(),
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			}
+			if err := s.repository.Create(post); err != nil {
 				logger.Errorf("Error creating posts: %v", err)
 			}
 		}

@@ -74,6 +74,7 @@ services:
     depends_on:
       - db
       - redis
+      - rabbitmq
     restart: always
     networks:
       - pgnet
@@ -168,6 +169,22 @@ services:
     networks:
       - pgnet
 
+  rabbitmq:
+#    container_name: rabbitmq_container
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+      - "${RABBITMQ_MANAGEMENT_PORT}:${RABBITMQ_MANAGEMENT_PORT}"
+    #    environment:
+    #      - RABBITMQ_DEFAULT_USER=admin
+    #      - RABBITMQ_DEFAULT_PASS=admin
+    volumes:
+      - ./rabbitmq_data/data/:/var/lib/rabbitmq
+      - ./rabbitmq_data/log/:/var/log/rabbitmq
+    restart: always
+    networks:
+      - appnet
+
 volumes:
   db_data:
   prometheus_data:
@@ -177,6 +194,7 @@ volumes:
 #  db_data_sync_2:
   db_shard_1_data:
   db_shard_2_data:
+  rabbitmq_data:
 
 networks:
   pgnet:
