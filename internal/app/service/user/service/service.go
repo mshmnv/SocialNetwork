@@ -1,10 +1,9 @@
 package service
 
 import (
-	"context"
-
 	"github.com/mshmnv/SocialNetwork/internal/app/service/user/datastruct"
 	"github.com/mshmnv/SocialNetwork/internal/app/service/user/repository"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
 	logger "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
@@ -24,9 +23,9 @@ type Service struct {
 	repository IRepository
 }
 
-func BuildService(ctx context.Context) *Service {
+func BuildService(db *postgres.DB) *Service {
 	return &Service{
-		repository: repository.NewRepository(ctx),
+		repository: repository.NewRepository(db),
 	}
 }
 

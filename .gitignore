@@ -3,3 +3,5 @@
 /postgresql/
 /cache_data/
 .DS_Store
+/rabbitmq_data/
+/redis_data/

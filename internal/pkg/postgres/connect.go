@@ -1,33 +1,31 @@
 package postgres
 
 import (
-	"context"
 	"database/sql"
+	"os"
 
 	"github.com/pkg/errors"
 	logger "github.com/sirupsen/logrus"
 )
 
-var dbKey = "db"
-
 const (
-	conn = "postgres://admin:root@db_container:5432/social_network?sslmode=disable"
-	//connAsync = "postgres://admin:root@db_async_container:5432/social_network?sslmode=disable"
+	conn = "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db_container:$POSTGRES_PORT/social_network?sslmode=disable"
+	//connAsync = "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db_async_container:5432/social_network?sslmode=disable"
 )
 
-type DatabaseSet struct {
-	master DB
+type DB struct {
+	master db
 	//async  DB
 }
 
-type DB struct {
+type db struct {
 	db     *sql.DB
 	closer func() error
 }
 
-func Connect(ctx context.Context) (context.Context, error) {
+func Connect() (*DB, error) {
 	var err error
-	dbSet := DatabaseSet{}
+	dbSet := &DB{}
 
 	dbSet.master.db, dbSet.master.closer, err = connect(conn)
 	if err != nil {
@@ -39,13 +37,13 @@ func Connect(ctx context.Context) (context.Context, error) {
 	//	return nil, nil, err
 	//}
 
-	logger.Info("Successfully connected to database")
+	logger.Info("Successfully connected to postgres")
 
-	return newContext(ctx, &dbSet), nil
+	return dbSet, nil
 }
 
 func connect(connection string) (*sql.DB, func() error, error) {
-	db, err := sql.Open("postgres", connection)
+	db, err := sql.Open("postgres", os.ExpandEnv(connection))
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "Unable to connect to database: %s", err)
 	}
@@ -58,24 +56,6 @@ func connect(connection string) (*sql.DB, func() error, error) {
 	return db, db.Close, nil
 }
 
-func newContext(ctx context.Context, dbSet *DatabaseSet) context.Context {
-	ctx = context.WithValue(ctx, &dbKey, dbSet)
-	return ctx
+func (d *DB) GetConnection() *sql.DB {
+	return d.master.db
 }
-
-func FromContext(ctx context.Context) *DatabaseSet {
-	dbStorage, ok := ctx.Value(&dbKey).(*DatabaseSet)
-	if !ok {
-		panic("Error getting db connection from context")
-	}
-
-	return dbStorage
-}
-
-func GetDB(ctx context.Context) *sql.DB {
-	return FromContext(ctx).master.db
-}
-
-//func GetAsyncDB(ctx context.Context) *sql.DB {
-//	return FromContext(ctx).async.db
-//}

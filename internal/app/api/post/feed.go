@@ -11,8 +11,8 @@ import (
 // Feed реализует /post/feed
 func (i *Implementation) Feed(ctx context.Context, req *desc.FeedRequest) (*desc.FeedResponse, error) {
 
-	userId := ctx.Value("user_id").(uint64)
-	if userId == 0 {
+	userID := ctx.Value("user_id").(uint64)
+	if userID == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Invalid user id")
 	}
 	if req.GetOffset() == 0 && req.GetLimit() == 0 {
@@ -20,7 +20,7 @@ func (i *Implementation) Feed(ctx context.Context, req *desc.FeedRequest) (*desc
 		req.Limit = 1000
 	}
 
-	feed, err := i.postService.Feed(userId, req.GetOffset(), req.GetLimit())
+	feed, err := i.postService.Feed(userID, req.GetOffset(), req.GetLimit())
 	if err != nil {
 		return nil, err
 	}

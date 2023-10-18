@@ -1,10 +1,10 @@
 package post
 
 import (
-	"context"
-
 	"github.com/mshmnv/SocialNetwork/internal/app/service/post/datastruct"
 	postService "github.com/mshmnv/SocialNetwork/internal/app/service/post/service"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/redis"
 	postAPI "github.com/mshmnv/SocialNetwork/pkg/api/post"
 )
 
@@ -22,9 +22,9 @@ type Implementation struct {
 	postAPI.UnimplementedPostAPIServer
 }
 
-func NewPostAPI(ctx context.Context) *Implementation {
+func NewPostAPI(db *postgres.DB, redisClient *redis.Client) *Implementation {
 
 	return &Implementation{
-		postService: postService.BuildService(ctx),
+		postService: postService.BuildService(db, redisClient),
 	}
 }

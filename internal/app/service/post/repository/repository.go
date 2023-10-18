@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"context"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -11,19 +10,19 @@ import (
 )
 
 type Repository struct {
-	ctx context.Context
+	db *postgres.DB
 }
 
 const (
 	postTable = "posts"
 )
 
-func NewRepository(ctx context.Context) *Repository {
-	return &Repository{ctx: ctx}
+func NewRepository(db *postgres.DB) *Repository {
+	return &Repository{db: db}
 }
 
 func (r *Repository) Create(userID uint64, text string) error {
-	tx, err := postgres.GetDB(r.ctx).Begin()
+	tx, err := r.db.GetConnection().Begin()
 	if err != nil {
 		return err
 	}
@@ -53,7 +52,7 @@ func (r *Repository) Create(userID uint64, text string) error {
 }
 
 func (r *Repository) Update(userID, postID uint64, text string) error {
-	tx, err := postgres.GetDB(r.ctx).Begin()
+	tx, err := r.db.GetConnection().Begin()
 	if err != nil {
 		return err
 	}
@@ -82,7 +81,7 @@ func (r *Repository) Update(userID, postID uint64, text string) error {
 	return nil
 }
 func (r *Repository) Delete(userID, postID uint64) error {
-	tx, err := postgres.GetDB(r.ctx).Begin()
+	tx, err := r.db.GetConnection().Begin()
 	if err != nil {
 		return err
 	}
@@ -121,7 +120,7 @@ func (r *Repository) Get(postID uint64) (*datastruct.Post, error) {
 
 	var results datastruct.Post
 
-	if err = postgres.GetDB(r.ctx).QueryRow(query, args...).
+	if err = r.db.GetConnection().QueryRow(query, args...).
 		Scan(&results.PostID, &results.AuthorID, &results.Text); err != nil {
 		return nil, errors.Wrap(err, "error getting post")
 	}
@@ -140,7 +139,7 @@ func (r *Repository) GetPostsAfterDate(date time.Time) ([]datastruct.Post, error
 	}
 
 	var result []datastruct.Post
-	rows2, err := postgres.GetDB(r.ctx).Query(query, args...)
+	rows2, err := r.db.GetConnection().Query(query, args...)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting posts after date 1")
 	}

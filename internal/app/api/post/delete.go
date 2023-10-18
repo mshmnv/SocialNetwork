@@ -11,8 +11,8 @@ import (
 // Delete реализует /post/delete/{id}
 func (i *Implementation) Delete(ctx context.Context, req *desc.DeleteRequest) (*desc.DeleteResponse, error) {
 
-	userId := ctx.Value("user_id").(uint64)
-	if userId == 0 {
+	userID := ctx.Value("user_id").(uint64)
+	if userID == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Invalid user id")
 	}
 
@@ -20,7 +20,7 @@ func (i *Implementation) Delete(ctx context.Context, req *desc.DeleteRequest) (*
 		return nil, status.Error(codes.InvalidArgument, "Invalid post id")
 	}
 
-	if err := i.postService.Delete(userId, req.GetId()); err != nil {
+	if err := i.postService.Delete(userID, req.GetId()); err != nil {
 		return nil, err
 	}
 

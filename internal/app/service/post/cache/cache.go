@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"context"
 	"encoding/json"
 	"strconv"
 	"time"
@@ -22,27 +21,30 @@ type IFriendService interface {
 type PostCache struct {
 	posts     chan *datastruct.Post
 	userPosts datastruct.UserPosts
+
+	redisClient *redis.Client
 }
 
-func NewPostCacheJob(ctx context.Context, postService IPostService) *PostCache {
+func NewPostCacheJob(postService IPostService, redisClient *redis.Client) *PostCache {
 	p := &PostCache{
-		posts:     make(chan *datastruct.Post),
-		userPosts: datastruct.NewUserPosts(),
+		posts:       make(chan *datastruct.Post),
+		userPosts:   datastruct.NewUserPosts(),
+		redisClient: redisClient,
 	}
-	go p.StartPostCacheJob(ctx)
+	go p.StartPostCacheJob()
 	go StartPostUpdateJob(p, postService)
 	return p
 }
 
-func (p *PostCache) StartPostCacheJob(ctx context.Context) {
+func (p *PostCache) StartPostCacheJob() {
 	for post := range p.posts {
 		if post.IsDeleted {
-			if err := p.deletePostFromCache(ctx, post); err != nil {
+			if err := p.deletePostFromCache(post); err != nil {
 				logger.Errorf("Error deleting post from cache: %v", err)
 			}
 			continue
 		}
-		if err := p.addPostToRedis(ctx, post); err != nil {
+		if err := p.addPostToRedis(post); err != nil {
 			logger.Errorf("Error adding post to cache: %v", err)
 		}
 	}
@@ -61,13 +63,13 @@ func createPostRecord(post *datastruct.Post) (key, value string, err error) {
 	return strconv.Itoa(int(post.PostID)), string(jsonPost), nil
 }
 
-func (p *PostCache) addPostToRedis(ctx context.Context, post *datastruct.Post) error {
+func (p *PostCache) addPostToRedis(post *datastruct.Post) error {
 	key, value, err := createPostRecord(post)
 	if err != nil {
 		return err
 	}
 
-	if err = redis.GetRedis(ctx).Set(key, value, expiration).Err(); err != nil {
+	if err = p.redisClient.Set(key, value, expiration).Err(); err != nil {
 		return err
 	}
 	p.userPosts.AddUserPost(post.AuthorID, post.PostID)
@@ -75,15 +77,15 @@ func (p *PostCache) addPostToRedis(ctx context.Context, post *datastruct.Post) e
 	return nil
 }
 
-func (p *PostCache) deletePostFromCache(ctx context.Context, post *datastruct.Post) error {
-	if err := redis.GetRedis(ctx).Del(strconv.Itoa(int(post.PostID))).Err(); err != nil {
+func (p *PostCache) deletePostFromCache(post *datastruct.Post) error {
+	if err := p.redisClient.Del(strconv.Itoa(int(post.PostID))).Err(); err != nil {
 		return err
 	}
 	p.userPosts.DeleteUserPost(post.AuthorID, post.PostID)
 	return nil
 }
 
-func (p *PostCache) GetFeedFromCache(ctx context.Context, userIDs []uint64) ([]datastruct.Post, error) {
+func (p *PostCache) GetFeedFromCache(userIDs []uint64) ([]datastruct.Post, error) {
 
 	postsID := p.userPosts.GetPostsForUsers(userIDs)
 	if len(postsID) == 0 {
@@ -94,7 +96,7 @@ func (p *PostCache) GetFeedFromCache(ctx context.Context, userIDs []uint64) ([]d
 	result := make([]datastruct.Post, 0, len(postsID))
 
 	for _, postID := range postsID {
-		res, err := redis.GetRedis(ctx).Get(strconv.FormatUint(postID, 10)).Result()
+		res, err := p.redisClient.Get(strconv.FormatUint(postID, 10)).Result()
 		if err != nil {
 			logger.Errorf("Error getting posts from redis: %v", err)
 			continue

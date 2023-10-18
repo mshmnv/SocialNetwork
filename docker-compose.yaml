@@ -4,11 +4,12 @@ services:
     container_name: db_container
     image: postgres:15.2-alpine
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: root
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: social_network
+      PGDATA: /var/lib/postgresql/data/db_data
     volumes:
       - ./postgresql/db_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -21,8 +22,8 @@ services:
 #    ports:
 #      - "5433:5432"
 #    environment:
-#      POSTGRES_USER: admin
-#      POSTGRES_PASSWORD: root
+#      POSTGRES_USER: ${POSTGRES_USER}
+#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 #    volumes:
 #      - ./postgresql/db_data_async/:/var/lib/postgresql/data
 #    restart: unless-stopped
@@ -37,8 +38,8 @@ services:
 #    ports:
 #      - "5434:5432"
 #    environment:
-#      POSTGRES_USER: admin
-#      POSTGRES_PASSWORD: root
+#      POSTGRES_USER: ${POSTGRES_USER}
+#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 #    volumes:
 #      - ./postgresql/db_data_sync_1/:/var/lib/postgresql/data
 #    restart: unless-stopped
@@ -53,8 +54,8 @@ services:
 #    ports:
 #      - "5435:5432"
 #    environment:
-#      POSTGRES_USER: admin
-#      POSTGRES_PASSWORD: root
+#      POSTGRES_USER: ${POSTGRES_USER}
+#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 #    volumes:
 #      - ./postgresql/db_data_sync_2/:/var/lib/postgresql/data
 #    restart: unless-stopped
@@ -69,10 +70,10 @@ services:
       context: .
       dockerfile: ./build/Dockerfile
     ports:
-      - "8080:8080"
+      - "${SERVER_HTTP_PORT}:${SERVER_HTTP_PORT}"
     depends_on:
       - db
-      - cache
+      - redis
     restart: always
     networks:
       - pgnet
@@ -111,8 +112,8 @@ services:
     ports:
       - 9187:9187
     environment:
-      DATA_SOURCE_NAME: "postgres://admin:root@db_container:5432/social_network?sslmode=disable"
-#      DATA_SOURCE_NAME: "postgres://admin:root@db_container:5432/social_network?sslmode=disable,postgres://admin:root@db_async_container:5432/social_network?sslmode=disable"
+      DATA_SOURCE_NAME: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db_container:5432/social_network?sslmode=disable"
+#      DATA_SOURCE_NAME: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db_container:5432/social_network?sslmode=disable,postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db_async_container:5432/social_network?sslmode=disable"
     links:
       - db
 #      - db_async
@@ -121,24 +122,61 @@ services:
       - pgnet
       - appnet
 
-  cache:
+  redis:
+    container_name: redis_container
     image: redis:6.2-alpine
     restart: always
     ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      - '${REDIS_PORT}:${REDIS_PORT}'
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
     volumes:
-      - ./cache_data:/data
+      - ./redis_data:/data
     networks:
       - appnet
+
+# SHARDING
+
+  db-shard-1:
+    container_name:  ${POSTGRES_SHARD_1_HOST}
+    image: postgres:15.2-alpine
+    ports:
+      - "${POSTGRES_SHARD_1_PORT}:${POSTGRES_PORT}"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: social_network
+      PGDATA: /var/lib/postgresql/data/db_shard_1_data
+    volumes:
+      - ./postgresql/db_shard_1_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - pgnet
+
+  db-shard-2:
+    container_name: ${POSTGRES_SHARD_2_HOST}
+    image: postgres:15.2-alpine
+    ports:
+      - "${POSTGRES_SHARD_2_PORT}:${POSTGRES_PORT}"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: social_network
+      PGDATA: /var/lib/postgresql/data/db_shard_2_data
+    volumes:
+      - ./postgresql/db_shard_2_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - pgnet
 
 volumes:
   db_data:
   prometheus_data:
-  cache_data:
+  redis_data:
 #  db_data_async:
 #  db_data_sync_1:
 #  db_data_sync_2:
+  db_shard_1_data:
+  db_shard_2_data:
 
 networks:
   pgnet:

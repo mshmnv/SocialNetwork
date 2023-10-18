@@ -1,8 +1,8 @@
 run:
     timeout: 5m
     tests: true
-#    skip-dirs:
-#        - test/testdata_etc # test files
+    skip-dirs:
+        - pkg/api/
 #    skip-files:
 #        -
 
@@ -26,7 +26,7 @@ linters:
         - funlen
         - gochecknoinits
         - goconst
-        - gocritic
+#        - gocritic
         - gocyclo
         - gofmt
         - goimports

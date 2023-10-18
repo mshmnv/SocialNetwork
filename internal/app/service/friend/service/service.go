@@ -1,9 +1,8 @@
 package service
 
 import (
-	"context"
-
 	"github.com/mshmnv/SocialNetwork/internal/app/service/friend/repository"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
 )
 
 type IRepository interface {
@@ -17,9 +16,9 @@ type Service struct {
 	repository IRepository
 }
 
-func BuildService(ctx context.Context) *Service {
+func BuildService(db *postgres.DB) *Service {
 	return &Service{
-		repository: repository.NewRepository(ctx),
+		repository: repository.NewRepository(db),
 	}
 }
 

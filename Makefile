@@ -3,6 +3,7 @@ LOCAL_BIN=$(CURRENT_DIR)/bin
 PROTO_SRC=$(CURRENT_DIR)/api
 PROTO_DST=$(CURRENT_DIR)/pkg/api
 MIGRATIONS_FOLDER=$(CURRENT_DIR)/db/migrations
+MIGRATIONS_SHARDED_FOLDER=$(CURRENT_DIR)/db/migrations-sharded
 
 .PHONY: generate
 generate: .generate-proto
@@ -15,6 +16,7 @@ generate: .generate-proto
 	buf generate --path $(PROTO_SRC)/user/*.proto
 	buf generate --path $(PROTO_SRC)/friend/*.proto
 	buf generate --path $(PROTO_SRC)/post/*.proto
+	buf generate --path $(PROTO_SRC)/dialog/*.proto
 
 .PHONY: up
 up:
@@ -38,14 +40,20 @@ fill-db:
 	curl -X POST "http://localhost:8080/add-users"
 
 POSTGRES_CONNECTION=user=admin password=root dbname=social_network host=localhost port=5432 sslmode=disable
+POSTGRES_SHARD_1_CONNECTION=user=admin password=root dbname=social_network host=localhost port=5433 sslmode=disable
+POSTGRES_SHARD_2_CONNECTION=user=admin password=root dbname=social_network host=localhost port=5434 sslmode=disable
 
 .PHONY: migration-up
 migration-up:
 	goose -dir $(MIGRATIONS_FOLDER) postgres "$(POSTGRES_CONNECTION)" up
+	goose -dir $(MIGRATIONS_SHARDED_FOLDER) postgres "$(POSTGRES_SHARD_1_CONNECTION)" up
+	goose -dir $(MIGRATIONS_SHARDED_FOLDER) postgres "$(POSTGRES_SHARD_2_CONNECTION)" up
 
 .PHONY: migration-down
 migration-down:
 	goose -dir $(MIGRATIONS_FOLDER) postgres "$(POSTGRES_CONNECTION)" down
+	goose -dir $(MIGRATIONS_SHARDED_FOLDER) postgres "$(POSTGRES_SHARD_1_CONNECTION)" up
+	goose -dir $(MIGRATIONS_SHARDED_FOLDER) postgres "$(POSTGRES_SHARD_2_CONNECTION)" up
 
 .PHONY: lint
 lint:

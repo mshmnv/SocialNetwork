@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "2aece4bd-1a51-4326-9383-225398f5f595",
+		"_postman_id": "cc12b144-aa2e-4a5f-b7a8-32b62e3679f8",
 		"name": "social-network",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "14783961"
@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 1009906,\n    \"password\": \"best password\"\n}",
+							"raw": "{\n    \"id\": 1,\n    \"password\": \"sam's best password\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -42,7 +42,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/user/get/1009900",
+							"raw": "localhost:8080/user/get/2",
 							"host": [
 								"localhost"
 							],
@@ -50,7 +50,7 @@
 							"path": [
 								"user",
 								"get",
-								"1009900"
+								"2"
 							]
 						}
 					},
@@ -172,7 +172,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": 21,\n    \"text\": \"My super cool updated post !!!\"\n}",
+							"raw": "{\n    \"id\": 8416,\n    \"text\": \"My super cool updated post !!!\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -219,7 +219,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/post/get/352",
+							"raw": "localhost:8080/post/get/1",
 							"host": [
 								"localhost"
 							],
@@ -227,7 +227,7 @@
 							"path": [
 								"post",
 								"get",
-								"352"
+								"1"
 							]
 						}
 					},
@@ -271,6 +271,47 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "feed posted",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Connection",
+								"value": "Upgrade",
+								"type": "text"
+							},
+							{
+								"key": "Upgrade",
+								"value": "websocket",
+								"type": "text"
+							},
+							{
+								"key": "Sec-Websocket-Version",
+								"value": "13",
+								"type": "text"
+							},
+							{
+								"key": "Sec-WebSocket-Key",
+								"value": "x3JJHMbDL1EzLkh9GBhXDw==",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "localhost:8080/post/feed/posted",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"post",
+								"feed",
+								"posted"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -283,7 +324,7 @@
 						"method": "PUT",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/friend/set/1009906",
+							"raw": "localhost:8080/friend/set/3",
 							"host": [
 								"localhost"
 							],
@@ -291,7 +332,7 @@
 							"path": [
 								"friend",
 								"set",
-								"1009906"
+								"3"
 							]
 						}
 					},
@@ -300,10 +341,10 @@
 				{
 					"name": "delete",
 					"request": {
-						"method": "GET",
+						"method": "PUT",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/friend/delete/1009900",
+							"raw": "localhost:8080/friend/delete/2",
 							"host": [
 								"localhost"
 							],
@@ -311,7 +352,60 @@
 							"path": [
 								"friend",
 								"delete",
-								"1009900"
+								"2"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "dialog",
+			"item": [
+				{
+					"name": "send",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"My super cool message\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/dialog/2/send",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"dialog",
+								"2",
+								"send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/dialog/list",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"dialog",
+								"list"
 							]
 						}
 					},

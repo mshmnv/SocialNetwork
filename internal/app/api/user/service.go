@@ -1,10 +1,9 @@
 package user
 
 import (
-	"context"
-
 	"github.com/mshmnv/SocialNetwork/internal/app/service/user/datastruct"
 	userService "github.com/mshmnv/SocialNetwork/internal/app/service/user/service"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
 	userAPI "github.com/mshmnv/SocialNetwork/pkg/api/user"
 )
 
@@ -21,8 +20,8 @@ type Implementation struct {
 	userAPI.UnimplementedUserAPIServer
 }
 
-func NewUserAPI(ctx context.Context) *Implementation {
+func NewUserAPI(db *postgres.DB) *Implementation {
 	return &Implementation{
-		userService: userService.BuildService(ctx),
+		userService: userService.BuildService(db),
 	}
 }

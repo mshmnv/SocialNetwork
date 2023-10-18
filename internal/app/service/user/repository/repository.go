@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -15,19 +14,19 @@ import (
 )
 
 type Repository struct {
-	ctx context.Context
+	db *postgres.DB
 }
 
 const (
 	userTable = "users"
 )
 
-func NewRepository(ctx context.Context) *Repository {
-	return &Repository{ctx: ctx}
+func NewRepository(db *postgres.DB) *Repository {
+	return &Repository{db: db}
 }
 
 func (r *Repository) Register(data *datastruct.User) error {
-	tx, err := postgres.GetDB(r.ctx).Begin()
+	tx, err := r.db.GetConnection().Begin()
 	if err != nil {
 		return err
 	}
@@ -64,7 +63,7 @@ func (r *Repository) GetUser(id uint64) (*datastruct.User, error) {
 
 	var results datastruct.User
 
-	if err = postgres.GetDB(r.ctx).QueryRow(query, args...).
+	if err = r.db.GetConnection().QueryRow(query, args...).
 		Scan(&results.FirstName, &results.SecondName, &results.Age, &results.BirthDate, &results.Biography, &results.City); err != nil {
 		return nil, errors.Wrap(err, "Error getting user data")
 	}
@@ -84,7 +83,7 @@ func (r *Repository) GetLoginData(id uint64) (*datastruct.LoginData, error) {
 
 	var results datastruct.LoginData
 
-	if err = postgres.GetDB(r.ctx).QueryRow(query, args...).
+	if err = r.db.GetConnection().QueryRow(query, args...).
 		Scan(&results.ID, &results.Password); err != nil {
 		return nil, errors.Wrap(err, "no user with this email found")
 	}
@@ -103,7 +102,7 @@ func (r *Repository) IsExistedUser(id uint64) bool {
 	}
 
 	var result int64
-	if err = postgres.GetDB(r.ctx).QueryRow(query, args...).
+	if err = r.db.GetConnection().QueryRow(query, args...).
 		Scan(&result); err != nil {
 		return false
 	}
@@ -125,7 +124,7 @@ func (r *Repository) Search(firstName, secondName string) ([]datastruct.User, er
 		return nil, errors.Wrap(err, "Error searching users")
 	}
 
-	rows, err := postgres.GetDB(r.ctx).Query(query, args...)
+	rows, err := r.db.GetConnection().Query(query, args...)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error searching users")
 	}
@@ -148,7 +147,7 @@ func (r *Repository) Search(firstName, secondName string) ([]datastruct.User, er
 }
 
 func (r *Repository) AddUsers() error {
-	f, err := os.Open("testing/people.json")
+	f, err := os.Open("info/testing/people.json")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -162,15 +161,11 @@ func (r *Repository) AddUsers() error {
 		return err
 	}
 
-	if err = r.addUsers(users); err != nil {
-		return err
-	}
-
-	return nil
+	return r.addUsers(users)
 }
 
 func (r *Repository) addUsers(data []datastruct.User) error {
-	tx, err := postgres.GetDB(r.ctx).Begin()
+	tx, err := r.db.GetConnection().Begin()
 	if err != nil {
 		return err
 	}

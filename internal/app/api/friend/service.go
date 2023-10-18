@@ -1,9 +1,8 @@
 package friend
 
 import (
-	"context"
-
 	friendService "github.com/mshmnv/SocialNetwork/internal/app/service/friend/service"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
 	friendAPI "github.com/mshmnv/SocialNetwork/pkg/api/friend"
 )
 
@@ -17,8 +16,8 @@ type Implementation struct {
 	friendAPI.UnimplementedFriendAPIServer
 }
 
-func NewFriendAPI(ctx context.Context) *Implementation {
+func NewFriendAPI(db *postgres.DB) *Implementation {
 	return &Implementation{
-		friendService: friendService.BuildService(ctx),
+		friendService: friendService.BuildService(db),
 	}
 }

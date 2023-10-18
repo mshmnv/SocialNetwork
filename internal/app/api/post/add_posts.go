@@ -11,12 +11,12 @@ import (
 // AddPosts реализует /add-posts
 func (i *Implementation) AddPosts(ctx context.Context, req *desc.AddPostsRequest) (*desc.AddPostsResponse, error) {
 
-	userId := ctx.Value("user_id").(uint64)
-	if userId == 0 {
+	userID := ctx.Value("user_id").(uint64)
+	if userID == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Invalid user id")
 	}
 
-	if err := i.postService.AddPosts(userId); err != nil {
+	if err := i.postService.AddPosts(userID); err != nil {
 		return nil, err
 	}
 	return &desc.AddPostsResponse{}, nil

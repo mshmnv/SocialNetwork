@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package post;
+
+option go_package = "github.com/mshmnv/SocialNetwork/dialog";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service DialogAPI {
+
+  rpc Send (SendRequest) returns (SendResponse) {
+    option (google.api.http) = {
+      post: "/dialog/{user_id}/send"
+      body: "*"
+    };
+  }
+
+  rpc List (ListRequest) returns (ListResponse) {
+    option (google.api.http) = {
+      get: "/dialog/list"
+    };
+  }
+}
+
+message SendRequest {
+  uint64 user_id = 1;
+  string text = 2;
+}
+
+message SendResponse {}
+
+message ListRequest {
+}
+
+message ListResponse {
+  message DialogMessage {
+    uint64 from = 1;
+    uint64 to = 2;
+    string text = 3;
+  google.protobuf.Timestamp sent_at = 4;
+  }
+  repeated DialogMessage messages = 1;
+}
+

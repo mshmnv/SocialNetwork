@@ -9,7 +9,9 @@ import (
 	"os"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	dialogService "github.com/mshmnv/SocialNetwork/internal/app/api/dialog"
 	friendService "github.com/mshmnv/SocialNetwork/internal/app/api/friend"
 	postService "github.com/mshmnv/SocialNetwork/internal/app/api/post"
 	userService "github.com/mshmnv/SocialNetwork/internal/app/api/user"
@@ -17,6 +19,7 @@ import (
 	"github.com/mshmnv/SocialNetwork/internal/pkg/metrics"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/redis"
+	dialogDesc "github.com/mshmnv/SocialNetwork/pkg/api/dialog"
 	friendDesc "github.com/mshmnv/SocialNetwork/pkg/api/friend"
 	postDesc "github.com/mshmnv/SocialNetwork/pkg/api/post"
 	userDesc "github.com/mshmnv/SocialNetwork/pkg/api/user"
@@ -28,39 +31,51 @@ import (
 func main() {
 	ctx := context.Background()
 
-	ctx, err := postgres.Connect(ctx)
+	if err := godotenv.Load(".env"); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	db, err := postgres.Connect()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	ctx, err = redis.Connect(ctx)
+	shardedDB, err := postgres.ConnectSharded()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	app := startServer(ctx)
+	redisCl, err := redis.Connect()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	app := startServer(ctx, db, shardedDB, redisCl)
 
 	if err := app.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func startServer(ctx context.Context) run.Group {
+func startServer(ctx context.Context, db *postgres.DB, shardedDB *postgres.ShardedDB, redisClient *redis.Client) run.Group {
 	fs := flag.NewFlagSet("", flag.ExitOnError)
-	grpcAddr := fs.String("grpc-addr", ":6565", "grpc address")
-	httpAddr := fs.String("http-addr", ":8080", "http address")
+	grpcAddr := fs.String("grpc-addr", ":"+os.Getenv("SERVER_GRPC_PORT"), "grpc address")
+	httpAddr := fs.String("http-addr", ":"+os.Getenv("SERVER_HTTP_PORT"), "http address")
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		log.Fatal(err)
 	}
 
 	// register service
 	server := grpc.NewServer()
-	userServer := userService.NewUserAPI(ctx)
+
+	userServer := userService.NewUserAPI(db)
 	userDesc.RegisterUserAPIServer(server, userServer)
-	friendServer := friendService.NewFriendAPI(ctx)
+	friendServer := friendService.NewFriendAPI(db)
 	friendDesc.RegisterFriendAPIServer(server, friendServer)
-	postServer := postService.NewPostAPI(ctx)
+	postServer := postService.NewPostAPI(db, redisClient)
 	postDesc.RegisterPostAPIServer(server, postServer)
+	dialogServer := dialogService.NewDialogAPI(shardedDB, db)
+	dialogDesc.RegisterDialogAPIServer(server, dialogServer)
 
 	rmux := runtime.NewServeMux()
 	mux := http.NewServeMux()
@@ -76,6 +91,10 @@ func startServer(ctx context.Context) run.Group {
 			log.Fatal(err)
 		}
 		err = postDesc.RegisterPostAPIHandlerServer(ctx, rmux, postServer)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = dialogDesc.RegisterDialogAPIHandlerServer(ctx, rmux, dialogServer)
 		if err != nil {
 			log.Fatal(err)
 		}

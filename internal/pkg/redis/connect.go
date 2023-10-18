@@ -1,24 +1,20 @@
 package redis
 
 import (
-	"context"
+	"os"
 
 	"github.com/go-redis/redis"
 	logger "github.com/sirupsen/logrus"
 )
 
-var redisKey = "redis"
+type Client struct {
+	*redis.Client
+}
 
-const (
-	host = "cache"
-	port = "6379"
-	pass = "eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81"
-)
-
-func Connect(ctx context.Context) (context.Context, error) {
+func Connect() (*Client, error) {
 	client := redis.NewClient(&redis.Options{
-		Addr:     host + ":" + port,
-		Password: pass,
+		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
+		Password: os.Getenv("REDIS_PASSWORD"),
 		DB:       0,
 	})
 
@@ -26,25 +22,7 @@ func Connect(ctx context.Context) (context.Context, error) {
 		return nil, err
 	}
 
-	logger.Info("Successfully connected to database")
+	logger.Info("Successfully connected to redis")
 
-	return newContext(ctx, client), nil
-}
-
-func newContext(ctx context.Context, redis *redis.Client) context.Context {
-	ctx = context.WithValue(ctx, &redisKey, redis)
-	return ctx
-}
-
-func FromContext(ctx context.Context) *redis.Client {
-	dbStorage, ok := ctx.Value(&redisKey).(*redis.Client)
-	if !ok {
-		panic("Error getting redis connection from context")
-	}
-
-	return dbStorage
-}
-
-func GetRedis(ctx context.Context) *redis.Client {
-	return FromContext(ctx)
+	return &Client{client}, nil
 }

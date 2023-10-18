@@ -14,7 +14,8 @@ import (
 )
 
 var authRequiredMethods = []string{"/friend/set/", "/friend/delete/",
-	"/post/create", "/post/update", "/post/delete/", "/post/feed", "/add-posts"}
+	"/post/create", "/post/update", "/post/delete/", "/post/feed", "/add-posts",
+	"/dialog/"}
 
 const loginMethod = "/login"
 

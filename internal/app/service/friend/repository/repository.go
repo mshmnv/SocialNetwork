@@ -1,15 +1,13 @@
 package repository
 
 import (
-	"context"
-
 	sq "github.com/Masterminds/squirrel"
 	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
 	"github.com/pkg/errors"
 )
 
 type Repository struct {
-	ctx context.Context
+	db *postgres.DB
 }
 
 const (
@@ -18,12 +16,12 @@ const (
 	approvedStatus = "approved"
 )
 
-func NewRepository(ctx context.Context) *Repository {
-	return &Repository{ctx: ctx}
+func NewRepository(db *postgres.DB) *Repository {
+	return &Repository{db: db}
 }
 
 func (r *Repository) SendFriendRequest(friendID uint64, userID uint64) error {
-	tx, err := postgres.GetDB(r.ctx).Begin()
+	tx, err := r.db.GetConnection().Begin()
 	if err != nil {
 		return err
 	}
@@ -52,7 +50,7 @@ func (r *Repository) SendFriendRequest(friendID uint64, userID uint64) error {
 }
 
 func (r *Repository) ApproveFriendRequest(friendID uint64, userID uint64) error {
-	tx, err := postgres.GetDB(r.ctx).Begin()
+	tx, err := r.db.GetConnection().Begin()
 	if err != nil {
 		return err
 	}
@@ -78,7 +76,7 @@ func (r *Repository) ApproveFriendRequest(friendID uint64, userID uint64) error 
 }
 
 func (r *Repository) DeleteFriend(friendID uint64, userID uint64) error {
-	tx, err := postgres.GetDB(r.ctx).Begin()
+	tx, err := r.db.GetConnection().Begin()
 	if err != nil {
 		return err
 	}
@@ -113,7 +111,7 @@ func (r *Repository) GetUserFriends(userID uint64) ([]uint64, error) {
 
 	var result []uint64
 
-	rows1, err := postgres.GetDB(r.ctx).Query(query1, args...)
+	rows1, err := r.db.GetConnection().Query(query1, args...)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting user friends")
 	}
@@ -134,7 +132,7 @@ func (r *Repository) GetUserFriends(userID uint64) ([]uint64, error) {
 		return nil, err
 	}
 
-	rows2, err := postgres.GetDB(r.ctx).Query(query2, args...)
+	rows2, err := r.db.GetConnection().Query(query2, args...)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting user friends")
 	}

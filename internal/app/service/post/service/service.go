@@ -2,7 +2,6 @@ package service
 
 import (
 	"bufio"
-	"context"
 	"os"
 	"time"
 
@@ -10,6 +9,8 @@ import (
 	"github.com/mshmnv/SocialNetwork/internal/app/service/post/cache"
 	"github.com/mshmnv/SocialNetwork/internal/app/service/post/datastruct"
 	"github.com/mshmnv/SocialNetwork/internal/app/service/post/repository"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/postgres"
+	"github.com/mshmnv/SocialNetwork/internal/pkg/redis"
 	logger "github.com/sirupsen/logrus"
 )
 
@@ -26,24 +27,22 @@ type IFriendService interface {
 }
 
 type IPostCache interface {
-	GetFeedFromCache(ctx context.Context, userID []uint64) ([]datastruct.Post, error)
+	GetFeedFromCache(userID []uint64) ([]datastruct.Post, error)
 }
 
 type Service struct {
-	ctx           context.Context
 	repository    IRepository
 	postCache     IPostCache
 	friendService IFriendService
 }
 
-func BuildService(ctx context.Context) *Service {
+func BuildService(db *postgres.DB, redisClient *redis.Client) *Service {
 	s := &Service{
-		ctx:           ctx,
-		repository:    repository.NewRepository(ctx),
-		friendService: friendService.BuildService(ctx),
+		repository:    repository.NewRepository(db),
+		friendService: friendService.BuildService(db),
 	}
 
-	s.postCache = cache.NewPostCacheJob(ctx, s)
+	s.postCache = cache.NewPostCacheJob(s, redisClient)
 	return s
 }
 
@@ -71,7 +70,7 @@ func (s *Service) Feed(userID, offset, limit uint64) ([]datastruct.Post, error) 
 		return nil, nil
 	}
 
-	posts, err := s.postCache.GetFeedFromCache(s.ctx, friendsIDs)
+	posts, err := s.postCache.GetFeedFromCache(friendsIDs)
 	if err != nil {
 		logger.Errorf("Error getting posts from cache: %v", err)
 		return nil, err
@@ -97,7 +96,7 @@ func (s *Service) GetPostsAfterDate(date time.Time) ([]datastruct.Post, error) {
 }
 
 func (s *Service) AddPosts(userID uint64) error {
-	f, err := os.Open("testing/posts.txt")
+	f, err := os.Open("info/testing/posts.txt")
 	if err != nil {
 		logger.Errorf("Error reading file: %v", err)
 	}
