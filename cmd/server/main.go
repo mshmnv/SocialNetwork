@@ -108,7 +108,6 @@ func startServer(ctx context.Context, db *postgres.DB, shardedDB *postgres.Shard
 	// websocket handler
 
 	mux.Handle("/post/feed/posted", auth.AuthenticationMiddleware(metrics.PrometheusMiddleware(websocket.HTTPHandler())))
-	//mux.Handle("/post/feed/posted", metrics.PrometheusMiddleware(websocket.WebSocketHandler()))
 
 	// serve
 

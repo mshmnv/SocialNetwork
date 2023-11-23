@@ -1,12 +1,12 @@
 # Шардирование
 
-1)  Скачаем docker-compose.yml, которым будем пользоваться в дальнейшем.
+1) Скачаем docker-compose.yml, которым будем пользоваться в дальнейшем.
 
 curl https://raw.githubusercontent.com/citusdata/docker/master/docker-compose.yml > docker-compose.yml
 
 2) POSTGRES_PASSWORD=pass docker-compose -p citus up --scale worker=2 -d
 
-3)  Подключимся к координатору:
+3) Подключимся к координатору:
 
 docker exec -it citus_master psql -U postgres
 

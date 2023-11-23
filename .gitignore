@@ -5,3 +5,4 @@
 .DS_Store
 /rabbitmq_data/
 /redis_data/
+/tarantool-app/data/

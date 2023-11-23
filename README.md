@@ -45,6 +45,7 @@
 6. Queues
  ```
    /post/feed/posted/ - online updated feed using websocket connections.
+   
    Implemetation:
    RabbitMQ is used as a queue between newly created posts and open websocket connections.
    Once new post created, producer sends all new posts to user's friends queues if they have opened connections.
@@ -52,6 +53,9 @@
 ```
 
 7. In-memory db. Tarantool
+```
+    
+```
 8. Microservices 
 9. Balancing and Fault tolerance 
 10. Distributed Transactions

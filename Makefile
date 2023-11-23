@@ -69,4 +69,4 @@ ws-request:
 		 --header "Sec-WebSocket-Key: SGVsbG8sIHdvcmxkIQ==" \
 		 --header "Sec-WebSocket-Version: 13" \
 		 localhost:8080/post/feed/posted \
-		 --cookie "session-token=ba54b78e-5820-4044-a353-cb0c720b7208"
+		 --cookie "session-token=909e8d05-d652-4297-855a-5ca1229a7603"
